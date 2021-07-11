@@ -73,7 +73,7 @@
     </el-table>
 
     <!-- 分页 -->
-    <Page :total="100" show-total show-elevator show-sizer></Page>
+    <!-- <Page :total="100" show-total show-elevator show-sizer></Page> -->
 
     <!-- 客户详情弹窗 -->
     <el-dialog class="new-cust-dialog" :visible.sync="openCustDetailPanel">
@@ -248,43 +248,42 @@
     </el-dialog>
 
     <!-- 导入客户数据对话框 -->
-    <el-dialog class="import-cust-dialog" title="导入客户" :visible.sync="openImportCustPanel">
-      <el-row :gutter="20">
-        <el-col :offset="1">
-          <p>一、请按照数据模板的格式准备要导入的数据，<el-button type="text">点击下载</el-button>《客户导入模板》</p>
-          <p>注意事项：</p>
+    <el-dialog class="import-cust-dialog" title="导入客户" :visible.sync="openImportCustPanel" @close="selectMoreOption = ''">
+      <el-row>
+        <el-col :offset="1" class="attention-1">
+          <p>一、请按照数据模板的格式准备要导入的数据，<el-button type="text" @click="downloadCustModel">点击下载</el-button>《客户导入模板》，注意事项如下：</p>
           <div>
             <div>1. 模板中的表头名称不能更改，表头行不能删除；</div>
-            <div>2. 其中标<i>*</i>为必填项，必须填写；</div>
-            <div>3. 导入文件请勿超过20MB。</div>
+            <div>2. 其中标<b>&nbsp;*&nbsp;</b>为必填项，必须填写；</div>
+            <div>3. 导入文件请勿超过<b>20MB</b>。</div>
           </div>
         </el-col>
       </el-row>
       <el-row>
-        <el-col :offset="1">
+        <el-col :offset="1" class="attention-2">
           <p>二、请选择数量重复时的处理方式</p>
           <p>
-            <el-select v-model="excelDataRepeatProcessMethod" placeholder="更多" size="small">
-              <el-option v-for="item in selectMore" :key="item.value" :label="item.name" :value="item.value">
+            <el-select v-model="excelDataRepeatProcessMethod" placeholder="请选择" size="small">
+              <el-option v-for="item in excelDataRepeatProcessMethodList" :key="item.value" :label="item.label" :value="item.value">
               </el-option>
             </el-select>
           </p>
         </el-col>
       </el-row>
       <el-row>
-        <el-col :offset="1">
+        <el-col :offset="1" class="attention-3">
           <p>三、请选择要导入的文件</p>
           <p>
-            <el-upload class="upload" action="https://jsonplaceholder.typicode.com/posts/" multiple :limit="3">
-              <el-button size="small" plain type="primary">点击上传</el-button>
-              <div slot="tip" class="el-upload__tip">支持扩展名：.xls，且不超过20MB</div>
+            <el-upload class="upload" action="https://jsonplaceholder.typicode.com/posts/" multiple :limit="3" accept=".xls, .xlsx" @change="custDataUploadChange">
+              <el-button size="small" plain type="primary">上传文件</el-button>
+              <div slot="tip" class="el-upload__tip">支持扩展名：.xlsx，且不超过<b>20MB</b></div>
             </el-upload>
           </p>
         </el-col>
       </el-row>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="openCreateNewCustPanel = false">取消</el-button>
-        <el-button type="primary" @click="createNewCust">提交</el-button>
+        <el-button @click="openImportCustPanel = false">取消</el-button>
+        <el-button type="primary" @click="createNewCust">导入</el-button>
       </div>
     </el-dialog>
   </div>
@@ -326,6 +325,7 @@ export default {
         }
       ],
       selectMoreOption: "",
+      selectMoreExportLoading: false,
       custList: [],
       showCustList: [],
       deleteId: "",
@@ -381,7 +381,21 @@ export default {
           attachUploadTime: "2021-07-10 16:23:00"
         }
       ],
-      excelDataRepeatProcessMethod: ""
+      excelDataRepeatProcessMethod: "",
+      excelDataRepeatProcessMethodList: [
+        {
+          label: "覆盖原有数据",
+          value: 0
+        },
+        {
+          label: "不覆盖原有数据",
+          value: 1
+        },
+        {
+          label: "保留原有数据",
+          value: 2
+        }
+      ]
     };
   },
   created() {
@@ -583,15 +597,83 @@ export default {
 
     // 更多下拉框选择
     handlerSelectMore(option) {
-      console.log(option);
       switch (option) {
         case 0:
           this.openImportCustPanel = true;
           break;
         case 1:
-          this.openExportCustPanel = true;
+          // 导出当前客户列表
+          // 导出loading动画面板
+          const loading = this.$loading({
+            lock: true,
+            text: "正在导出中...",
+            spinner: "el-icon-loading",
+            background: "rgba(255, 255, 255, 1)"
+          });
+
+          // 表头
+          const tHeader = [
+            "客户姓名",
+            "电话",
+            "更新时间",
+            "证件类型",
+            "证件号码",
+            "客户来源",
+            "客户级别",
+            "省、市、区/县",
+            "详细地址",
+            "创建人"
+          ];
+
+          // 数据格式化处理
+          const data = this.showCustList.map(v => {
+            return [
+              v.custName,
+              v.custMobile,
+              v.custUpdateTime,
+              v.custDocumentType,
+              v.custDocumentNum,
+              v.custFrom,
+              v.custLevel,
+              v.custAddress,
+              v.custAddressDetail,
+              v.founder
+            ];
+          });
+
+          import("../../../excel/Export2Excel").then(excel => {
+            excel.export_json_to_excel({
+              header: tHeader,
+              data,
+              filename:
+                "客户信息表" +
+                new Date(new Date().getTime() + 28800000)
+                  .toJSON()
+                  .substr(0, 19)
+                  .replace("T", "_")
+            });
+            this.selectMoreOption = "";
+            loading.close();
+          });
           break;
       }
+    },
+
+    // 客户导入模板下载
+    downloadCustModel() {
+      let fileName = "客户导入模板";
+      let obj = "hello";
+      const temp = document.createElement("a");
+      temp.download = fileName || "download";
+      temp.href = URL.createObjectURL(obj);
+      temp.click();
+      setTimeout(() => {
+        URL.revokeObjectURL(temp.href);
+      }, 100);
+    },
+
+    custDataUploadChange(file, fileList) {
+      console.log(file);
     },
 
     handleSizeChange() {},
@@ -649,6 +731,7 @@ export default {
     }
   }
 
+  // 所有对话框样式
   /deep/ .el-dialog__header {
     padding: 20px;
     border-bottom: 1px solid #ccc;
@@ -712,41 +795,56 @@ export default {
     }
   }
 
-  // 调整删除确认对话框样式
+  // 调整客户删除确认对话框样式
   .el-dialog__wrapper.delete-dialog {
     margin-top: 20vh;
     /deep/ .el-dialog {
-      height: 150px;
       display: flex;
       flex-direction: column;
       justify-content: center;
 
       .el-dialog__body {
-        padding: 8px 20px;
+        padding: 15px 20px 8px;
       }
     }
   }
 
   // 调整导入客户对话框样式
   .el-dialog__wrapper.import-cust-dialog {
-    /deep/ .el-dialog__body .el-col {
-      &:nth-child(1) {
-        & > p:first-child {
-          margin: 5px 0;
-        }
-
-        & > p:nth-child(2) {
-          text-indent: 2em;
-        }
-
+    /deep/ .el-dialog__body {
+      .attention-1 {
         div {
           text-indent: 2em;
+          b {
+            color: red;
+          }
+
+          &:last-child {
+            margin-bottom: 10px;
+          }
         }
       }
 
-      &:nth-child(3) {
-        background: red;
-        // text-indent: 4em;
+      .attention-2,
+      .attention-3 {
+        p {
+          height: 40px;
+          line-height: 40px;
+
+          &:last-child {
+            margin-left: 2em;
+          }
+        }
+      }
+
+      .attention-3 {
+        .el-upload__tip {
+          margin-top: -10px;
+
+          b {
+            color: red;
+          }
+        }
       }
     }
   }
