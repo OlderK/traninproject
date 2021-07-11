@@ -16,7 +16,8 @@ const messages = {
 const localeI18n = {
   locale: 'zh_CN', // set locale
   fallbackLocale: 'zh_CN',
-  messages // set locale messages
+  messages, // set locale messages
+  silentTranslationWarn: true
 }
 
 export default localeI18n

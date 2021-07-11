@@ -1,143 +1,239 @@
 <template>
-  <div>
-    <h3 class="title" title="">客户管理</h3>
-    <div class="nav-option">
-      <div class="nav-left">
-        <!-- <Input v-model="custName" @click="searchByCustName" search enter-button="搜索" placeholder="请输入客户姓名" /> -->
-        <el-input v-model="searchCustName" placeholder="请输入客户姓名" size="small">
-          <el-button slot="append" @click="searchByCustName">搜索</el-button>
+  <div class="customer-list">
+    <!-- <h3 class="title">客户管理</h3> -->
+    <!-- 头部操作区 -->
+    <el-row :gutter="10" class="nav-option" type="flex" justify="space-between">
+      <el-col :span="4" class="search-input">
+        <el-input v-model="searchCustName" placeholder="请输入客户姓名" size="small" clearable>
         </el-input>
-        <el-input v-model="searchCustPhone" placeholder="请输入客户电话" size="small">
-          <el-button slot="append" @click="searchByCustPhone">搜索</el-button>
+      </el-col>
+      <el-col :span="4" class="search-input">
+        <el-input v-model="searchCustMobile" placeholder="请输入客户电话" size="small" clearable>
         </el-input>
-        <div class="customer-level">
-          <label for="">客户级别</label>
-          <el-select v-model="searchCustLevel" placeholder="请选择" size="small">
-            <el-option v-for="item in custLevelList" :key="item" :label="item" :value="item">
-            </el-option>
-          </el-select>
-          <!-- <Select v-model="searchCustFrom" style="width:200px">
-            <Option v-for="(i, item) in custFromList" :value="item" :key="i">{{ item }}</Option>
-          </Select> -->
-        </div>
-        <div class="customer-from">
-          <label for="">客户来源</label>
-          <el-select v-model="searchCustFrom" placeholder="请选择" size="small">
-            <el-option v-for="item in custFromList" :key="item" :label="item" :value="item">
-            </el-option>
-          </el-select>
-          <!-- <Select v-model="searchCustFrom" style="width:200px">
-            <Option v-for="(i, item) in custFromList" :value="item" :key="i">{{ item }}</Option>
-          </Select> -->
-        </div>
-        <Button type="primary" @click="searchByCustName">查询</Button>
-        <Button type="primary" ghost>重置</Button>
-      </div>
-      <div class="nav-right">
-
-        <Button type="primary" @click="openCreateNewCustPanel = true">新建用户</Button>
-        <!-- <Select v-model="deleteId" placeholder="选择要删除的用户id">
-          <Option v-for="item in custList" :value="item.custId" :key="item.custId">{{ item.custId }}</Option>
-        </Select>
-        <Button type="primary" @click="deleteCust">删除用户</Button>
-        <Button type="primary" @click="updateCust">更新用户</Button> -->
-        <Select v-model="model1" placeholder="更多">
-          <Option v-for="item in selectMore" :value="item.value" :key="item.value">{{ item.name }}</Option>
-        </Select>
-      </div>
-    </div>
+      </el-col>
+      <el-col :span="3" class="cust-select">
+        <label for="">客户来源</label>
+        <el-select v-model="searchCustFrom" placeholder="请选择" size="small" clearable>
+          <el-option v-for="item in custFromList" :key="item" :label="item" :value="item">
+          </el-option>
+        </el-select>
+      </el-col>
+      <el-col :span="3" class="cust-select">
+        <label for="">客户级别</label>
+        <el-select v-model="searchCustLevel" placeholder="请选择" size="small" clearable>
+          <el-option v-for="item in custLevelList" :key="item" :label="item" :value="item">
+          </el-option>
+        </el-select>
+      </el-col>
+      <el-col :span="3">
+        <el-button type="primary" @click="searchForCust" size="small">查询</el-button>
+        <el-button plain size="small" @click="resetSearch">重置</el-button>
+      </el-col>
+      <el-col :span="3" class="nav-right">
+        <el-button type="primary" @click="handlerClickCreateCust" size="small">新建用户</el-button>
+        <el-select v-model="selectMoreOption" @change="handlerSelectMore" placeholder="更多" size="small">
+          <el-option v-for="item in selectMore" :key="item.value" :label="item.name" :value="item.value">
+          </el-option>
+        </el-select>
+      </el-col>
+    </el-row>
 
     <!-- 客户表格展示区 -->
-    <el-table :data="custList" style="width: 100%" :header-row-style="{ color: '#000', background: '#000000' }" empty-text="啥也没有。">
-      <el-table-column prop="custName" label="客户姓名" width="100" align="right">
-      </el-table-column>
-      <el-table-column prop="custMobile" label="电话" min-width="180" align="right">
-      </el-table-column>
-      <el-table-column prop="custMobile" sortable label="更新时间" align="right">
-      </el-table-column>
-      <el-table-column prop="custDocumentType" label="证件类型" align="right">
-      </el-table-column>
-      <el-table-column prop="custLevel" label="客户级别" align="right">
-      </el-table-column>
-      <el-table-column prop="custAdress" label="省、市、区/县" align="right">
-      </el-table-column>
-      <el-table-column prop="custAdressDetail" label="详细地址" align="right">
-      </el-table-column>
-      <el-table-column prop="founder" label="创建人" align="right">
-      </el-table-column>
-      <el-table-column prop="" label="操作" min-width="180" align="right">
+    <el-table :data="showCustList" style="width: 100%" :header-cell-style="{ background:'#f0f2f5',color:'#000' }" :row-style="{ height: 0 + 'px' }" :cell-style="{padding: '5px'}" tooltip-effect="light" border height="500px">
+      <template slot="empty">
+        <el-empty :image-size="200" description="啥也没有。"></el-empty>
+      </template>
+      <el-table-column prop="custName" label="客户姓名" width="100" align="center">
         <template slot-scope="scope">
-          <el-button type="text" @click="openEditorCustPanel = true">编辑</el-button>
-          <el-button type="text" @click="handlerClickEditor(scope.row)">删除</el-button>
+          <el-button type="text" @click="getCustInfo(scope.row)">{{scope.row.custName}}</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column prop="custMobile" label="电话" width="120" align="center">
+      </el-table-column>
+      <el-table-column prop="custUpdateTime" min-width="130" sortable label="更新时间" align="center">
+      </el-table-column>
+      <el-table-column prop="custDocumentType" width="110" label="证件类型" align="center" :show-overflow-tooltip="true"></el-table-column>
+      <el-table-column prop="custDocumentNum" width="110" label="证件号码" align="center" :show-overflow-tooltip="true"></el-table-column>
+      <el-table-column prop="custFrom" width="110" label="客户来源" align="center" :show-overflow-tooltip="true">
+      </el-table-column>
+      <el-table-column prop="custLevel" label="客户级别" align="center">
+      </el-table-column>
+      <el-table-column prop="custAddress" label="省、市、区/县" min-width="100" align="center" :show-overflow-tooltip="true">
+      </el-table-column>
+      <el-table-column prop="custAddressDetail" label="详细地址" align="center" :show-overflow-tooltip="true">
+      </el-table-column>
+      <el-table-column prop="founder" label="创建人" width="80" align="center">
+      </el-table-column>
+      <el-table-column prop="" label="操作" width="120" align="center">
+        <template slot-scope="scope">
+          <el-button type="text" @click="handlerClickEditor(scope.row)">编辑</el-button>
+          <el-button type="text" @click="handlerClickDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
 
-    <!-- 新增用户对话框 -->
-    <el-dialog class="new-cust-dialog" title="新建客户" :visible.sync="openCreateNewCustPanel">
-      <h1>基本信息</h1>
+    <!-- 分页 -->
+    <Page :total="100" show-total show-elevator show-sizer></Page>
+
+    <!-- 客户详情弹窗 -->
+    <el-dialog class="new-cust-dialog" :visible.sync="openCustDetailPanel">
+
+      <!-- 标题插槽 -->
+      <template slot="title">
+        <div class="cust-detail-title">
+          <i class="el-icon-user-solid"></i>
+          <span>{{ this.custDetaiPanelData.custName }}</span>
+        </div>
+      </template>
+
+      <!-- 客户信息 -->
+      <el-row :gutter="20" class="cust-info">
+        <el-col :span="5">
+          <span>客户级别</span>
+          <span>{{ this.custDetaiPanelData.custLevel }}</span>
+        </el-col>
+        <el-col :span="5" :offset="1">
+          <span>电话</span>
+          <span>{{ this.custDetaiPanelData.custMobile }}</span>
+        </el-col>
+        <el-col :span="5" :offset="1">
+          <span>负责人</span>
+          <span>{{this.custDetaiPanelData.founder }}</span>
+        </el-col>
+        <el-col :span="6" :offset="1">
+          <span>更新时间</span>
+          <span>{{ this.custDetaiPanelData.custUpdateTime }}</span>
+        </el-col>
+      </el-row>
+
+      <!-- 添加记录按钮 -->
+      <el-row class="add-record-btn">
+        <el-col :span="1" :offset="22">
+          <el-button type="text" @click="handlerClickEditor(scope.row)">添加记录</el-button>
+        </el-col>
+      </el-row>
+
+      <!-- 标签页切换 -->
+      <el-tabs v-model="custDetaiPanelData.activeTabName" class="tab">
+
+        <!-- 客户跟进记录表格展示 -->
+        <el-tab-pane label="跟进记录" name="followRecord">
+          <el-table :data="currentShowCustRecordList.recordList" style="width: 100%" :header-cell-style="{ background:'rgba(238, 238, 238, 0.2)',color:'#000', padding: '4px 0' }" :row-style="{ height: 0 + 'px' }" :cell-style="{ padding: '0px' }" tooltip-effect="light" height="260px">
+            <template slot="empty">
+              <el-empty :image-size="100" description="啥也没有。"></el-empty>
+            </template>
+            <el-table-column prop="followTime" label="时间" sortable min-width="100" align="center">
+            </el-table-column>
+            <el-table-column prop="followMethod" label="跟进方式" width="120" align="center">
+            </el-table-column>
+            <el-table-column prop="followContent" min-width="160" :show-overflow-tooltip="true" label="跟进内容" align="center">
+            </el-table-column>
+            <el-table-column prop="" label="操作" width="80" align="center">
+              <template slot-scope="scope">
+                <el-button type="text" @click="handlerClickDeleteRecord(scope.row)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+
+        <!-- 附件上传 -->
+        <el-tab-pane label="附件" name="attachment" class="attachment">
+          <el-upload class="upload" action="https://jsonplaceholder.typicode.com/posts/" multiple :limit="3">
+            <el-button size="small" plain type="primary">点击上传</el-button>
+            <span slot="tip" class="el-upload__tip">支持扩展名：.txt/.doc/.exel/.ppt，且不超过500kb</span>
+          </el-upload>
+
+          <el-table :data="currentShowCustAttachmentList" style="width: 100%" :header-cell-style="{ background:'rgba(238, 238, 238, 0.2)',color:'#000', padding: '4px 0' }" :row-style="{ height: 0 + 'px' }" :cell-style="{ padding: '0px' }" tooltip-effect="light" height="208px">
+            <template slot="empty">
+              <el-empty :image-size="100" description="啥也没有。"></el-empty>
+            </template>
+            <el-table-column prop="attachName" label="附件名称" min-width="80" align="center">
+            </el-table-column>
+            <el-table-column prop="attachSize" label="附件大小" width="80" align="center">
+            </el-table-column>
+            <el-table-column prop="attachUploader" width="100" :show-overflow-tooltip="true" label="上传人" align="center">
+            </el-table-column>
+            <el-table-column prop="attachUploadTime" min-width="160" :show-overflow-tooltip="true" label="上传时间" sortable align="center">
+            </el-table-column>
+            <el-table-column prop="" label="操作" width="120" align="center">
+              <template slot-scope="scope">
+                <el-button type="text" @click="handlerClickDeleteRecord(scope.row)">下载</el-button>
+                <el-button type="text" @click="handlerClickDeleteRecord(scope.row)">删除
+
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+        </el-tab-pane>
+      </el-tabs>
+    </el-dialog>
+
+    <!-- 新增/编辑用户对话框 -->
+    <el-dialog class="new-cust-dialog" :title="custPanelTitle" :visible.sync="openCreateNewCustPanel">
       <el-row :gutter="20">
-        <el-form :model="newCustForm" label-position="top" ref="newCustDialog">
+        <el-form :model="newCustForm" :rules="newCustFormRules" label-position="top" ref="newCustDialog">
           <el-col :span="8">
-            <el-form-item label="*姓名" label-width="80px">
+            <el-form-item label="姓名" label-width="80px" prop="custName">
               <el-input v-model="newCustForm.custName" autocomplete="off"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="证件类型" label-width="80px">
+            <el-form-item label="证件类型" label-width="80px" prop="custDocumentType">
               <el-select v-model="newCustForm.custDocumentType" placeholder="请选择">
-                <el-option label="区域一" value="shanghai"></el-option>
-                <el-option label="区域二" value="beijing"></el-option>
+                <el-option v-for="(item, i) in custDocumentTypeList" :key="i" :label="item" :value="item"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="证件号" label-width="80px">
-              <el-input v-model="newCustForm.founder" autocomplete="off"></el-input>
-              <!-- <el-input value="" autocomplete="off"></el-input> -->
+            <el-form-item label="证件号" label-width="80px" prop="custDocumentNum">
+              <el-input v-model="newCustForm.custDocumentNum" autocomplete="off"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="*客户级别" label-width="80px">
+            <el-form-item label="*客户级别" label-width="80px" prop="custLevel">
               <el-select v-model="newCustForm.custLevel" placeholder="请选择">
-                <el-option label="区域一" value="shanghai"></el-option>
-                <el-option label="区域二" value="beijing"></el-option>
+                <el-option v-for="(item, i) in custLevelList" :key="i" :label="item" :value="item"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="*手机" label-width="80px">
+            <el-form-item label="*手机" label-width="80px" prop="custMobile">
               <el-input v-model.number="newCustForm.custMobile" autocomplete="off"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="备注" label-width="80px">
-              <el-input v-model="newCustForm.custDocumentType" type="textarea" autocomplete="off"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="地区级连选择" label-width="80px">
-              <el-select v-model="newCustForm.custLevel" placeholder="请选择">
-                <el-option label="区域一" value="shanghai"></el-option>
-                <el-option label="区域二" value="beijing"></el-option>
+            <el-form-item label="*客户来源" label-width="80px" prop="custFrom">
+              <el-select v-model="newCustForm.custFrom" placeholder="请选择">
+                <el-option v-for="(item, i) in custFromList" :key="i" :label="item" :value="item"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="详细地址" label-width="80px">
-              <el-input v-model="newCustForm.custAdressDetail" autocomplete="off"></el-input>
+            <el-form-item label="地区级连选择" label-width="80px" prop="custAddress">
+              <el-cascader v-model="newCustForm.custAddress" placeholder="请选择" :options="options" filterable clearable></el-cascader>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="详细地址" label-width="80px" prop="custAddressDetail">
+              <el-input v-model="newCustForm.custAddressDetail" autocomplete="off"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="备注" label-width="80px" prop="custNote">
+              <el-input v-model="newCustForm.custNote" type="textarea" autocomplete="off"></el-input>
             </el-form-item>
           </el-col>
         </el-form>
       </el-row>
       <div slot="footer" class="dialog-footer">
         <el-button @click="openCreateNewCustPanel = false">取消</el-button>
-        <el-button type="primary" @click="createNewCust">新增</el-button>
+        <el-button type="primary" @click="createNewCust">提交</el-button>
       </div>
     </el-dialog>
 
     <!-- 删除用户对话框 -->
-    <el-dialog :visible.sync="openDeleteCustPanel" width="20%" :show-close="false">
+    <el-dialog class="delete-dialog" :visible.sync="openDeleteCustPanel" width="20%" :show-close="false">
       <template slot="title">
         <div style="display: flex; align-items: center;font-size: 14px; font-weight: bold;">
           <i class="el-icon-error" style="color: red; margin-right: 10px; font-size: 22px"></i>
@@ -151,114 +247,282 @@
       </span>
     </el-dialog>
 
+    <!-- 导入客户数据对话框 -->
+    <el-dialog class="import-cust-dialog" title="导入客户" :visible.sync="openImportCustPanel">
+      <el-row :gutter="20">
+        <el-col :offset="1">
+          <p>一、请按照数据模板的格式准备要导入的数据，<el-button type="text">点击下载</el-button>《客户导入模板》</p>
+          <p>注意事项：</p>
+          <div>
+            <div>1. 模板中的表头名称不能更改，表头行不能删除；</div>
+            <div>2. 其中标<i>*</i>为必填项，必须填写；</div>
+            <div>3. 导入文件请勿超过20MB。</div>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :offset="1">
+          <p>二、请选择数量重复时的处理方式</p>
+          <p>
+            <el-select v-model="excelDataRepeatProcessMethod" placeholder="更多" size="small">
+              <el-option v-for="item in selectMore" :key="item.value" :label="item.name" :value="item.value">
+              </el-option>
+            </el-select>
+          </p>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :offset="1">
+          <p>三、请选择要导入的文件</p>
+          <p>
+            <el-upload class="upload" action="https://jsonplaceholder.typicode.com/posts/" multiple :limit="3">
+              <el-button size="small" plain type="primary">点击上传</el-button>
+              <div slot="tip" class="el-upload__tip">支持扩展名：.xls，且不超过20MB</div>
+            </el-upload>
+          </p>
+        </el-col>
+      </el-row>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="openCreateNewCustPanel = false">取消</el-button>
+        <el-button type="primary" @click="createNewCust">提交</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import { regionData, CodeToText } from "element-china-area-data";
+import CUST_API from "../../../api/customer";
+import moment from "moment";
 export default {
   data() {
+    // 客户名校验
+    var validateName = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("请输入密码"));
+      } else {
+        if (this.newCustForm.custName !== "") {
+          this.$refs.newCustDialog.validateField("custName");
+        }
+        callback();
+      }
+    };
     return {
       searchCustName: "",
-      searchCustPhone: "",
+      searchCustMobile: "",
       searchCustLevel: "",
       searchCustFrom: "",
-      custLevelList: [1, 2, 3],
+      custDocumentTypeList: ["居民身份证", "港澳通行证", "护照"],
+      custLevelList: ["A", "B", "C", "D", "E"],
       custFromList: ["A", "B", "C"],
-      cityList: [1, 2, 3],
-      model1: "",
       selectMore: [
         {
-          value: "0",
+          value: 0,
           name: "导入"
         },
         {
-          value: "1",
+          value: 1,
           name: "导出"
         }
       ],
+      selectMoreOption: "",
       custList: [],
+      showCustList: [],
       deleteId: "",
+      openCustDetailPanel: false,
       openCreateNewCustPanel: false,
       openDeleteCustPanel: false,
       openEditorCustPanel: false,
+      openImportCustPanel: false,
+      openExportCustPanel: false,
+      custPanelTitle: "新建客户",
+      currentEditorCustId: 0,
       newCustForm: {
-        custAdress: "",
-        custAdressDetail: "",
-        custDocumentType: "",
-        custLevel: "",
-        custMobile: "4444",
         custName: "",
-        founder: ""
-      }
+        custMobile: "",
+        custDocumentType: "",
+        custDocumentNum: "",
+        custAddress: "",
+        custAddressDetail: "",
+        custLevel: "",
+        custFrom: "",
+        founder: "",
+        custNote: ""
+      },
+      newCustFormRules: {
+        custName: [
+          { required: true, message: "请输入用户名", trigger: "blur" },
+          {}
+        ]
+        // custMobile: [{ validator: validateName, trigger: "blur" }],
+        // custDocumentNum: [{ validator: validateName, trigger: "blur" }]
+      },
+      currentPage: 1,
+      options: regionData,
+      custDetaiPanelData: {
+        custName: "",
+        custLevel: "",
+        custMobile: "",
+        founder: "",
+        custUpdateTime: "",
+        activeTabName: "followRecord" // attachment
+      },
+      currentShowCustRecordList: [
+        {
+          custId: "",
+          recordList: []
+        }
+      ],
+      currentShowCustAttachmentList: [
+        {
+          attachName: "附件.txt",
+          attachSize: "50KB",
+          attachUploader: "小明",
+          attachUploadTime: "2021-07-10 16:23:00"
+        }
+      ],
+      excelDataRepeatProcessMethod: ""
     };
   },
   created() {
-    // this.$http.get("/api/cscpCusts?custName=${}").then(res => {
-    //   console.log(res);
-    // });
-    this.searchByCustName();
-  },
-  mounted() {
-    // this.$refs.newCustDialog.resetField();
+    // 页面首次加载获取数据
+    CUST_API.getCustList().then(res => {
+      const { status, data } = res.data;
+      if (status === 200) {
+        window.localStorage.setItem("custList", JSON.stringify(data));
+        //? 新建一个数组存储所有用户数据
+        // this.custList = res.data.data;
+        this.showCustList = data;
+      }
+    });
+
+    // console.log(moment().format("YYYY-MM-DD HH:mm:ss"));
   },
   methods: {
     // 搜索客户
-    searchByCustName() {
-      // console.log(this.custName);
-      this.$http
-        .get(`/api/cscpCusts?custName=${this.searchCustName}`)
-        .then(res => {
-          // console.log(res.data.data);
-          this.custList = res.data.data;
-        });
-    },
-
-    searchByCustPhone(phone) {
-      console.log(this.searchCustPhone);
-    },
-
-    // 新建客户
-    createNewCust() {
-      // let cscpCust = {
-      //   custAdress: "新用户的地址",
-      //   custAdressDetail: "新用户的详细地址",
-      //   custDocumentType: "新用户的角色类型",
-      //   custLevel: "新用户的等级",
-      //   custMobile: 0,
-      //   custName: "新用户的名字",
-      //   founder: "新用户的建立者"
-      // };
-      let cscpCust = this.newCustForm;
-      this.$http.post("/api/cscpCusts", cscpCust).then(res => {
-        if (res.status >= 200 && res.status < 300) {
-          this.$message({
-            message: "新增成功。",
-            type: "success"
-          });
-          this.openCreateNewCustPanel = false;
-
-          // 更新客户列表
-          this.searchByCustName();
-          // this.$refs["newCustDialog"].resetField();
-          for (let item of Object.keys(this.newCustForm)) {
-            this.newCustForm[item] = "";
-          }
-        } else {
-          this.$message.error("新增失败");
+    searchForCust() {
+      CUST_API.searchCustFromKey(
+        this.searchCustName,
+        this.searchCustMobile,
+        this.searchCustLevel,
+        this.searchCustFrom
+      ).then(res => {
+        if (res.data.status === 200) {
+          this.showCustList = res.data.data;
         }
+        // console.log(res);
       });
-      // console.log(this.newCustForm);
     },
 
-    // 编辑删除按钮点击
+    // 重置搜索
+    resetSearch() {
+      // 清空所有搜索框
+      this.searchCustName = "";
+      this.searchCustMobile = "";
+      this.searchCustLevel = "";
+      this.searchCustFrom = "";
+
+      // 判断缓存中是否存在客户数据
+      //? 需求不需要重新渲染客户数据列表
+      /* if (!window.localStorage.getItem("custList")) {
+        this.searchForCust();
+      } else {
+        this.showCustList = JSON.parse(window.localStorage.getItem("custList"));
+      } */
+    },
+
+    // 打开新建用户信息面板
+    handlerClickCreateCust() {
+      this.openCreateNewCustPanel = true;
+      this.custPanelTitle = "新建客户";
+      this.clearCustPanel();
+    },
+
+    // 新建/编辑客户
+    createNewCust() {
+      let cscpCust = this.newCustForm;
+
+      // 三级地址转换，需保证地址下拉栏不能为空
+      if (this.newCustForm.custAddress.length) {
+        cscpCust.custAddress = this.newCustForm.custAddress.reduce(
+          (prev, curr) => {
+            return prev + CodeToText[curr];
+          },
+          ""
+        );
+      }
+      if (this.custPanelTitle === "新建客户") {
+        cscpCust.custId = Math.floor(Math.random() * 10000 + 200);
+        cscpCust.custUpdateTime = moment().format("YYYY-MM-DD HH:mm:ss");
+        CUST_API.addNewCust(cscpCust).then(res => {
+          if (res.status >= 200 && res.status < 300) {
+            this.$message({
+              message: "新增成功。",
+              type: "success"
+            });
+            this.openCreateNewCustPanel = false;
+
+            // 更新客户列表
+            this.searchForCust();
+            // this.$refs["newCustDialog"].resetField();
+          } else {
+            this.$message.error("新增失败");
+          }
+        });
+      } else {
+        // 编辑客户
+        cscpCust.custId = this.currentEditorCustId;
+        // cscpCust.custId =
+        CUST_API.editorCust(cscpCust).then(res => {
+          if (res.status >= 200 && res.status < 300) {
+            this.$message({
+              message: "修改成功。",
+              type: "success"
+            });
+            this.openCreateNewCustPanel = false;
+
+            // 更新客户列表
+            this.searchForCust();
+            // this.$refs["newCustDialog"].resetField();
+          } else {
+            this.$message.error("修改失败");
+          }
+          this.searchForCust();
+        });
+      }
+    },
+
+    // 清空客户信息面板
+    clearCustPanel() {
+      for (let item of Object.keys(this.newCustForm)) {
+        this.newCustForm[item] = "";
+      }
+    },
+
+    // 编辑按钮点击
     handlerClickEditor(row) {
+      this.clearCustPanel();
+      this.custPanelTitle = "编辑客户";
+      this.openCreateNewCustPanel = true;
+      this.currentEditorCustId = row.custId;
+
+      // 将该列数据同步给展示的面板表单
+      //! 三级地址需要字符转换 todo
+      for (let key of Object.keys(row)) {
+        this.newCustForm[key] = row[key];
+      }
+    },
+
+    // 删除按钮点击
+    handlerClickDelete(row) {
       this.openDeleteCustPanel = true;
       this.deleteId = row.custId;
+      console.log(row.custId);
     },
 
     // 删除客户
     deleteCust() {
-      this.$http.delete(`/api/cscpCusts/${this.deleteId}`).then(res => {
+      CUST_API.deleteCust(this.deleteId).then(res => {
         if (res.status === 200) {
           this.$message({
             message: "删除成功。",
@@ -266,113 +530,233 @@ export default {
           });
           this.openDeleteCustPanel = false;
           // 更新客户列表
-          this.searchByCustName();
+          this.searchForCust();
         } else {
           this.$message.error("删除失败");
         }
       });
     },
 
-    // 修改客户
-    updateCust() {
-      let cscpCust = {
-        custAdress: "更改后用户的地址",
-        custAdressDetail: "更改后用户的详细地址",
-        custDocumentType: "更改后用户的角色类型",
-        custLevel: "更改后用户的等级",
-        custMobile: 0,
-        custId: this.deleteId,
-        custName: "更改后用户的名字",
-        founder: "更改后用户的建立者"
-      };
+    // 打开客户详情面板，获取用户信息
+    getCustInfo(row) {
+      this.openCustDetailPanel = true;
+      for (let key of Object.keys(this.custDetaiPanelData)) {
+        if (key !== "activeTabName") {
+          this.custDetaiPanelData[key] = row[key];
+        }
+      }
 
-      this.$http.put("/api/cscpCusts", cscpCust).then(res => {
-        console.log(res);
+      this.currentShowCustRecordList.custId = row.custId;
+
+      CUST_API.getCustRecords(row.custId).then(res => {
+        if (res.data.status === 200) {
+          this.currentShowCustRecordList.recordList = res.data.data.recordList;
+        }
       });
-    }
+    },
+
+    handlerClickDeleteRecord(row) {
+      CUST_API.deleteCustRecord(
+        this.currentShowCustRecordList.custId,
+        row.followId
+      ).then(res => {
+        if (res.data.status === 200) {
+          this.$message({
+            message: "记录删除成功。",
+            type: "success"
+          });
+          // 重新获取客户记录
+          console.log(this.currentShowCustRecordList.custId);
+
+          CUST_API.getCustRecords(this.currentShowCustRecordList.custId).then(
+            res => {
+              if (res.data.status === 200) {
+                this.currentShowCustRecordList.recordList =
+                  res.data.data.recordList;
+              }
+            }
+          );
+        }
+        // console.log();
+      });
+    },
+
+    // 更多下拉框选择
+    handlerSelectMore(option) {
+      console.log(option);
+      switch (option) {
+        case 0:
+          this.openImportCustPanel = true;
+          break;
+        case 1:
+          this.openExportCustPanel = true;
+          break;
+      }
+    },
+
+    handleSizeChange() {},
+
+    handleCurrentChange() {}
   }
 };
 </script>
 
 <style lang="less" scoped>
-.title {
-  font-size: 18px;
-  font-weight: bold;
-  margin: 15px 0;
-}
+.customer-list {
+  .title {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 15px 0;
+    color: #000;
+  }
 
-.nav-option {
-  height: 32px;
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
+  .nav-option {
+    height: 32px;
+    margin-top: 10px;
+    margin-bottom: 20px;
 
-  .nav-left {
-    height: 32px !important;
-    display: flex;
-    justify-content: left;
+    // 客户搜索框样式调整
+    .search-input /deep/ .el-input {
+      width: 200px;
 
-    // 调整搜索框宽度
-    & /deep/ .ivu-input-wrapper {
-      width: 181px;
-      margin-right: 20px;
-      .ivu-input.ivu-input-default {
-        width: 120px;
-      }
-      // 调整搜索按钮样式
-      .ivu-input-group-append.ivu-input-search {
-        // background: red !important;
+      .el-input__inner {
+        padding-right: 0;
       }
     }
 
-    .customer-level,
-    .customer-from {
-      margin-right: 10px;
-      width: 230px;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-
+    // 客户级别/来源下拉框样式调整
+    .cust-select {
+      // 设置最小宽度，防止展开导航栏时，文本换行
+      min-width: 180px;
       label {
-        display: inline-block;
-        min-width: 60px;
+        font-size: 13px;
+      }
+
+      /deep/ .el-select {
+        width: 90px;
+        margin-left: 10px;
+      }
+    }
+
+    // 更多下拉框样式调整
+    .nav-right {
+      width: 200px;
+
+      /deep/ .el-select {
+        width: 90px;
+        margin-left: 20px;
+      }
+    }
+  }
+
+  /deep/ .el-dialog__header {
+    padding: 20px;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .new-cust-dialog {
+    /deep/ .el-dialog {
+      margin-top: 15vh !important;
+    }
+
+    // 客户详情面板标题
+    .cust-detail-title {
+      display: flex;
+      align-items: center;
+      font-size: 18px;
+      i {
+        font-size: 25px;
         margin-right: 5px;
       }
+    }
 
-      // 调整客户下拉选框样式
-      & /deep/ .ivu-select {
-        .ivu-select-selection {
-          width: 153px;
-        }
+    // 客户信息展示样式
+    .cust-info {
+      margin-bottom: 40px;
 
-        // 调整下拉选框选项样式
-        .ivu-select-dropdown {
-          min-width: 153px !important;
-        }
+      .el-col {
+        height: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: left;
+        font-size: 15px;
       }
     }
 
-    .ivu-btn {
-      margin-right: 10px;
+    // 调整添加记录按钮位置
+    .add-record-btn {
+      .el-button {
+        position: relative;
+        top: 40px;
+        z-index: 1;
+      }
+    }
+
+    // 客户跟进记录
+    .tab {
+      /deep/ .el-tabs__header {
+        margin-bottom: 0;
+      }
+
+      .attachment {
+        padding: 10px 0;
+
+        .el-upload {
+          .el-button {
+            margin-right: 10px;
+            // border-color: red;
+          }
+        }
+      }
     }
   }
 
-  .nav-right {
-    display: flex;
-    justify-content: right;
+  // 调整删除确认对话框样式
+  .el-dialog__wrapper.delete-dialog {
+    margin-top: 20vh;
+    /deep/ .el-dialog {
+      height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
 
-    & /deep/ .ivu-select {
-      margin-left: 20px;
-      width: 100px !important;
+      .el-dialog__body {
+        padding: 8px 20px;
+      }
     }
   }
-}
 
-.new-cust-dialog {
-  h1 {
-    font-size: 18px;
-    font-weight: initial;
-    color: #000;
+  // 调整导入客户对话框样式
+  .el-dialog__wrapper.import-cust-dialog {
+    /deep/ .el-dialog__body .el-col {
+      &:nth-child(1) {
+        & > p:first-child {
+          margin: 5px 0;
+        }
+
+        & > p:nth-child(2) {
+          text-indent: 2em;
+        }
+
+        div {
+          text-indent: 2em;
+        }
+      }
+
+      &:nth-child(3) {
+        background: red;
+        // text-indent: 4em;
+      }
+    }
+  }
+
+  /*  /deep/.el-table--scrollable-y ::-webkit-scrollbar {
+    display: none;
+  } */
+
+  /deep/ .el-table .el-table__body-wrapper {
+    padding: 0 !important;
   }
 }
 </style>

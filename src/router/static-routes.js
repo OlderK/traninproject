@@ -58,7 +58,6 @@ const staticTree = [{
     path: '/customerManage',
     name: 'customer-manage',
     title: '客户管理',
-    // icon: 'md-man',
     icon: 'md-contacts',
     type: 'menu',
     component: () => import('../views/main/main.vue'),

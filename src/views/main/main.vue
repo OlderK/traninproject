@@ -39,7 +39,7 @@ export default {
       return {
         backgroundImage: `url(${
           this.shrink
-            ? require("../../assets/logo-min.png")
+            ? require("../../assets/new_logo-min.png")
             : require("../../assets/new_logo.png")
         })`,
         padding: this.shrink ? "11px" : "4px"
