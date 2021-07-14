@@ -35,8 +35,8 @@ Mock.mock(/\/api\/system\/refreshToken/, 'get', _ => {
 })
 
 // 报错处理
-Mock.mock(/\/sockjs-node\/info/, 'get', _ => {
-  console.log()
+Mock.mock(/\/sockjs-node\/info/, 'get', option => {
+  console.log(option)
   return {
     status: 200,
   }
@@ -57,12 +57,12 @@ Mock.mock(/\/api\/system\/cscpCurrentUserDetails/, 'get', _ => {
     discDetail: '@sentence(10)',
     discTitle: '@ctitle()',
     email: '@email()',
-    familyName: '@cname()',
+    familyName: '@cfirst()',
     id: 0,
     imgPath: "@image('100x100', '#894FC4', '#FFF', 'png', 'user')",
     lastLogin: "@date(yyyy-MM-dd hh:mm:ss)",
     mobile: "@string('number', 11)",
-    name: "@cname()",
+    name: "@clast()",
     registerTime: "@date(yyyy-MM-dd hh:mm:ss)",
     roleIds: "@string('number', 2)",
     roleNames: "@cword()",
@@ -78,25 +78,26 @@ Mock.mock(/\/api\/system\/cscpCurrentUserDetails/, 'get', _ => {
 
 // 模拟用户数据
 let searchDemoData = Mock.mock({
-  'data|15': [{
+  'data|3': [{
     custId: '@increment',
     custName: '@cname(2,3)',
-    custMobile: "@string('number', 11)",
+    custTel: "@string('number', 11)",
     custUpdateTime: '@date(yyyy-MM-dd hh:mm:ss)',
-    custDocumentType: "@ctitle(3, 4)",
-    custDocumentNum: "@string('number', 18)",
-    "custFrom": /[A-C]/,
+    custCreateTime: '@date(yyyy-MM-dd hh:mm:ss)',
+    custCardType: "@ctitle(3, 4)",
+    custCardNum: "@string('number', 18)",
+    "custOrigin": /(拜访)|(电话)|(广告)/,
     "custLevel": /[A-E]/,
     custAddress: "@county(true)",
-    custAddressDetail: "@city(true)",
-    custNote: '@sentence(20)',
-    founder: "@cname(2, 3)",
+    custDetailAddress: "@city(true)",
+    custRemark: '@sentence(20)',
+    custCreatFounder: "@cname(2, 3)",
   }]
 })
 
 // 模拟用户跟进记录
 let followRecords = Mock.mock({
-  'data|15': [{
+  'data|3': [{
     custId: '',
     'recordList|5': [{
       followId: '@increment',
@@ -128,11 +129,11 @@ Mock.mock(/\/api\/cscpCusts/, 'get', option => {
     if (data.custName) {
       res = res.filter(v => v.custName.indexOf(data.custName) > -1)
     }
-    if (data.custMobile) {
-      res = res.filter(v => v.custMobile.indexOf(data.custMobile) > -1)
+    if (data.custTel) {
+      res = res.filter(v => v.custTel.indexOf(data.custTel) > -1)
     }
-    if (data.custFrom) {
-      res = res.filter(v => v.custFrom.indexOf(data.custFrom) > -1)
+    if (data.custOrigin) {
+      res = res.filter(v => v.custOrigin.indexOf(data.custOrigin) > -1)
     }
     if (data.custLevel) {
       res = res.filter(v => v.custLevel.indexOf(data.custLevel) > -1)

@@ -4,6 +4,7 @@ import iView from 'view-design'
 import 'view-design/dist/styles/iview.css'
 import App from './app.vue'
 import util from './libs/util'
+import axios from 'axios'
 import router from './router/router'
 import store from './store/store'
 import VueI18n from 'vue-i18n'
@@ -14,19 +15,27 @@ import {
 import ElementUI from 'element-ui'
 // import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css';
-
+import vueXlsxTable from 'vue-xlsx-table'
+Vue.use(vueXlsxTable, {
+  rABS: false
+})
 import moment from 'moment'
+import dataV from '@jiaminghi/data-view'
 
-Vue.prototype.$moment = moment
-
+//! mock
 import './mock/mock'
 
+Vue.prototype.$moment = moment
+import * as echarts from 'echarts'
+Vue.prototype.$echarts = echarts
 
+Vue.use(dataV)
 Vue.use(ElementUI)
 
 Vue.config.productionTip = false
 Vue.prototype.$util = util
 Vue.prototype.$http = util.http
+Vue.prototype.$axios = axios
 
 Vue.use(bySrore)
 Vue.use(VueI18n)

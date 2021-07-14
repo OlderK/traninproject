@@ -48,21 +48,21 @@
           <el-button type="text" @click="getCustInfo(scope.row)">{{scope.row.custName}}</el-button>
         </template>
       </el-table-column>
-      <el-table-column prop="custMobile" label="电话" width="120" align="center">
+      <el-table-column prop="custTel" label="电话" width="120" align="center">
       </el-table-column>
       <el-table-column prop="custUpdateTime" min-width="130" sortable label="更新时间" align="center">
       </el-table-column>
-      <el-table-column prop="custDocumentType" width="110" label="证件类型" align="center" :show-overflow-tooltip="true"></el-table-column>
-      <el-table-column prop="custDocumentNum" width="110" label="证件号码" align="center" :show-overflow-tooltip="true"></el-table-column>
-      <el-table-column prop="custFrom" width="110" label="客户来源" align="center" :show-overflow-tooltip="true">
+      <el-table-column prop="custCardType" width="110" label="证件类型" align="center" :show-overflow-tooltip="true"></el-table-column>
+      <el-table-column prop="custCardNum" width="110" label="证件号码" align="center" :show-overflow-tooltip="true"></el-table-column>
+      <el-table-column prop="custOrigin" width="110" label="客户来源" align="center" :show-overflow-tooltip="true">
       </el-table-column>
       <el-table-column prop="custLevel" label="客户级别" align="center">
       </el-table-column>
       <el-table-column prop="custAddress" label="省、市、区/县" min-width="100" align="center" :show-overflow-tooltip="true">
       </el-table-column>
-      <el-table-column prop="custAddressDetail" label="详细地址" align="center" :show-overflow-tooltip="true">
+      <el-table-column prop="custDetailAddress" label="详细地址" align="center" :show-overflow-tooltip="true">
       </el-table-column>
-      <el-table-column prop="founder" label="创建人" width="80" align="center">
+      <el-table-column prop="custCreatFounder" label="创建人" width="80" align="center">
       </el-table-column>
       <el-table-column prop="" label="操作" width="120" align="center">
         <template slot-scope="scope">
@@ -94,11 +94,11 @@
         </el-col>
         <el-col :span="5" :offset="1">
           <span>电话</span>
-          <span>{{ this.custDetaiPanelData.custMobile }}</span>
+          <span>{{ this.custDetaiPanelData.custTel }}</span>
         </el-col>
         <el-col :span="5" :offset="1">
           <span>负责人</span>
-          <span>{{this.custDetaiPanelData.founder }}</span>
+          <span>{{this.custDetaiPanelData.custCreatFounder }}</span>
         </el-col>
         <el-col :span="6" :offset="1">
           <span>更新时间</span>
@@ -179,15 +179,15 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="证件类型" label-width="80px" prop="custDocumentType">
-              <el-select v-model="newCustForm.custDocumentType" placeholder="请选择">
+            <el-form-item label="证件类型" label-width="80px" prop="custCardType">
+              <el-select v-model="newCustForm.custCardType" placeholder="请选择">
                 <el-option v-for="(item, i) in custDocumentTypeList" :key="i" :label="item" :value="item"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="证件号" label-width="80px" prop="custDocumentNum">
-              <el-input v-model="newCustForm.custDocumentNum" autocomplete="off"></el-input>
+            <el-form-item label="证件号" label-width="80px" prop="custCardNum">
+              <el-input v-model="newCustForm.custCardNum" autocomplete="off"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -198,13 +198,13 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="*手机" label-width="80px" prop="custMobile">
-              <el-input v-model.number="newCustForm.custMobile" autocomplete="off"></el-input>
+            <el-form-item label="*手机" label-width="80px" prop="custTel">
+              <el-input v-model.number="newCustForm.custTel" autocomplete="off"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="*客户来源" label-width="80px" prop="custFrom">
-              <el-select v-model="newCustForm.custFrom" placeholder="请选择">
+            <el-form-item label="*客户来源" label-width="80px" prop="custOrigin">
+              <el-select v-model="newCustForm.custOrigin" placeholder="请选择">
                 <el-option v-for="(item, i) in custFromList" :key="i" :label="item" :value="item"></el-option>
               </el-select>
             </el-form-item>
@@ -215,13 +215,13 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="详细地址" label-width="80px" prop="custAddressDetail">
-              <el-input v-model="newCustForm.custAddressDetail" autocomplete="off"></el-input>
+            <el-form-item label="详细地址" label-width="80px" prop="custDetailAddress">
+              <el-input v-model="newCustForm.custDetailAddress" autocomplete="off"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="备注" label-width="80px" prop="custNote">
-              <el-input v-model="newCustForm.custNote" type="textarea" autocomplete="off"></el-input>
+            <el-form-item label="备注" label-width="80px" prop="custRemark">
+              <el-input v-model="newCustForm.custRemark" type="textarea" autocomplete="off"></el-input>
             </el-form-item>
           </el-col>
         </el-form>
@@ -274,23 +274,21 @@
         <el-col :offset="1" class="attention-3">
           <p>三、请选择要导入的文件</p>
           <p>
-            <el-upload class="upload" action="https://jsonplaceholder.typicode.com/posts/" multiple :limit="3" accept=".xls, .xlsx" @change="custDataUploadChange">
-              <el-button size="small" plain type="primary">上传文件</el-button>
-              <div slot="tip" class="el-upload__tip">支持扩展名：.xlsx，且不超过<b>20MB</b></div>
-            </el-upload>
+            <vue-xlsx-table @on-select-file="handleSelectedFile">上传文件</vue-xlsx-table>
+            <span slot="tip" class="el-upload__tip">支持扩展名：.xlsx，且不超过<b>20MB</b></span>
           </p>
         </el-col>
       </el-row>
       <div slot="footer" class="dialog-footer">
         <el-button @click="openImportCustPanel = false">取消</el-button>
-        <el-button type="primary" @click="createNewCust">导入</el-button>
+        <el-button type="primary" @click="importCustData">导入</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { regionData, CodeToText } from "element-china-area-data";
+import { regionData, CodeToText, TextToCode } from "element-china-area-data";
 import CUST_API from "../../../api/customer";
 import moment from "moment";
 export default {
@@ -313,7 +311,7 @@ export default {
       searchCustFrom: "",
       custDocumentTypeList: ["居民身份证", "港澳通行证", "护照"],
       custLevelList: ["A", "B", "C", "D", "E"],
-      custFromList: ["A", "B", "C"],
+      custFromList: ["拜访", "电话", "广告"],
       selectMore: [
         {
           value: 0,
@@ -332,38 +330,37 @@ export default {
       openCustDetailPanel: false,
       openCreateNewCustPanel: false,
       openDeleteCustPanel: false,
-      openEditorCustPanel: false,
       openImportCustPanel: false,
       openExportCustPanel: false,
       custPanelTitle: "新建客户",
       currentEditorCustId: 0,
       newCustForm: {
         custName: "",
-        custMobile: "",
-        custDocumentType: "",
-        custDocumentNum: "",
+        custTel: 0,
+        custCardType: "",
+        custCardNum: "",
         custAddress: "",
-        custAddressDetail: "",
+        custDetailAddress: "",
         custLevel: "",
-        custFrom: "",
-        founder: "",
-        custNote: ""
+        custOrigin: "",
+        custCreatFounder: "",
+        custRemark: ""
       },
       newCustFormRules: {
         custName: [
           { required: true, message: "请输入用户名", trigger: "blur" },
           {}
         ]
-        // custMobile: [{ validator: validateName, trigger: "blur" }],
-        // custDocumentNum: [{ validator: validateName, trigger: "blur" }]
+        // custTel: [{ validator: validateName, trigger: "blur" }],
+        // custCardNum: [{ validator: validateName, trigger: "blur" }]
       },
       currentPage: 1,
       options: regionData,
       custDetaiPanelData: {
         custName: "",
         custLevel: "",
-        custMobile: "",
-        founder: "",
+        custTel: "",
+        custCreatFounder: "",
         custUpdateTime: "",
         activeTabName: "followRecord" // attachment
       },
@@ -395,18 +392,19 @@ export default {
           label: "保留原有数据",
           value: 2
         }
-      ]
+      ],
+      importCustList: []
     };
   },
   created() {
     // 页面首次加载获取数据
     CUST_API.getCustList().then(res => {
-      const { status, data } = res.data;
+      const { status, data } = res;
       if (status === 200) {
-        window.localStorage.setItem("custList", JSON.stringify(data));
+        // window.localStorage.setItem("custList", JSON.stringify(data));
         //? 新建一个数组存储所有用户数据
         // this.custList = res.data.data;
-        this.showCustList = data;
+        this.showCustList = data.data;
       }
     });
 
@@ -421,10 +419,9 @@ export default {
         this.searchCustLevel,
         this.searchCustFrom
       ).then(res => {
-        if (res.data.status === 200) {
-          this.showCustList = res.data.data;
+        if (res.status === 200) {
+          this.showCustList = res.data;
         }
-        // console.log(res);
       });
     },
 
@@ -456,18 +453,20 @@ export default {
     createNewCust() {
       let cscpCust = this.newCustForm;
 
-      // 三级地址转换，需保证地址下拉栏不能为空
+      // 三级地址转换区号转汉字，需保证地址下拉栏不能为空
       if (this.newCustForm.custAddress.length) {
         cscpCust.custAddress = this.newCustForm.custAddress.reduce(
           (prev, curr) => {
-            return prev + CodeToText[curr];
+            return prev + " " + CodeToText[curr];
           },
           ""
         );
       }
       if (this.custPanelTitle === "新建客户") {
-        cscpCust.custId = Math.floor(Math.random() * 10000 + 200);
+        cscpCust.custTel = Number(cscpCust.custTel);
+        // cscpCust.custId = Math.floor(Math.random() * 10000 + 200);
         cscpCust.custUpdateTime = moment().format("YYYY-MM-DD HH:mm:ss");
+        console.log(cscpCust);
         CUST_API.addNewCust(cscpCust).then(res => {
           if (res.status >= 200 && res.status < 300) {
             this.$message({
@@ -521,10 +520,28 @@ export default {
       this.currentEditorCustId = row.custId;
 
       // 将该列数据同步给展示的面板表单
-      //! 三级地址需要字符转换 todo
       for (let key of Object.keys(row)) {
-        this.newCustForm[key] = row[key];
+        if (key !== "custAddress") {
+          this.newCustForm[key] = row[key];
+        }
       }
+
+      // 将地址转换为区号，映射到下拉框中显示
+      let areaCode = [];
+      if (row.custAddress.length) {
+        let arr = row.custAddress.trim().split(" ");
+        for (let i = 0, len = arr.length; i < len; ++i) {
+          if (i === 0) {
+            areaCode.push(TextToCode[arr[0]].code);
+          } else if (i === 1) {
+            areaCode.push(TextToCode[arr[0]][arr[1]].code);
+          } else {
+            areaCode.push(TextToCode[arr[0]][arr[1]][arr[2]].code);
+          }
+          2;
+        }
+      }
+      this.newCustForm.custAddress = areaCode;
     },
 
     // 删除按钮点击
@@ -629,17 +646,19 @@ export default {
           const data = this.showCustList.map(v => {
             return [
               v.custName,
-              v.custMobile,
+              v.custTel,
               v.custUpdateTime,
-              v.custDocumentType,
-              v.custDocumentNum,
-              v.custFrom,
+              v.custCardType,
+              v.custCardNum,
+              v.custOrigin,
               v.custLevel,
               v.custAddress,
-              v.custAddressDetail,
-              v.founder
+              v.custDetailAddress,
+              v.custCreatFounder
             ];
           });
+
+          // console.log(data);
 
           import("../../../excel/Export2Excel").then(excel => {
             excel.export_json_to_excel({
@@ -672,8 +691,69 @@ export default {
       }, 100);
     },
 
-    custDataUploadChange(file, fileList) {
-      console.log(file);
+    // 用户选中excel文件
+    handleSelectedFile(convertedData) {
+      const TITLE = [
+        { cnTitle: "客户姓名", enTitle: "custName" },
+        { cnTitle: "电话", enTitle: "custTel" },
+        { cnTitle: "更新时间", enTitle: "custUpdateTime" },
+        { cnTitle: "证件类型", enTitle: "custCardType" },
+        { cnTitle: "证件号码", enTitle: "custCardNum" },
+        { cnTitle: "客户来源", enTitle: "custOrigin" },
+        { cnTitle: "客户级别", enTitle: "custLevel" },
+        { cnTitle: "省、市、区/县", enTitle: "custAddress" },
+        { cnTitle: "详细地址", enTitle: "custDetailAddress" },
+        { cnTitle: "创建人", enTitle: "custCreatFounder" }
+      ];
+
+      let check = true;
+      let headerList = convertedData.header;
+
+      // 表头校验
+      for (let i = 0, len = headerList.length; i < len; ++i) {
+        if (headerList[i] !== TITLE[i].cnTitle) {
+          check = false;
+          break;
+        }
+      }
+
+      // 表中数据格式化
+      let custList = convertedData.body.map(v => {
+        let cnKeys = Object.keys(v);
+        let res = {};
+        for (let key of cnKeys) {
+          let enKey = TITLE.find(item => item.cnTitle === key).enTitle;
+          res[enKey] = v[key];
+        }
+        return res;
+      });
+
+      // console.log(custList);
+
+      // 对导入数据进行校验
+      //? 暂时只对表头进行校验
+      if (check) {
+        this.$message({
+          type: "success",
+          message: "文件校验成功。"
+        });
+        this.importCustList = custList;
+      } else {
+        this.$message({
+          type: "error",
+          message: "校验不合格，请按照模板要求，编辑后再重新上传。"
+        });
+      }
+      // console.log(convertedData);
+    },
+
+    importCustData() {
+      this.$message({
+        type: "success",
+        message: "导入成功。"
+      });
+      this.showCustList.unshift(...this.importCustList);
+      this.openImportCustPanel = false;
     },
 
     handleSizeChange() {},
@@ -844,6 +924,11 @@ export default {
           b {
             color: red;
           }
+        }
+
+        & > p:last-child {
+          display: flex;
+          flex-direction: column;
         }
       }
     }

@@ -11,7 +11,7 @@ export default {
   // 根据关键字搜索客户
   searchCustFromKey(searchCustName, searchCustMobile, searchCustLevel, searchCustFrom) {
     // return http.get(`/api/customersdto?custName=${searchCustName}&custTel=${searchCustMobile}&custLevel=${searchCustLevel}&custOrigin=${searchCustFrom}&page=1&size=3`)
-    return http.get(`/api/cscpCusts?custName=${searchCustName}&custMobile=${searchCustMobile}&custLevel=${searchCustLevel}&custFrom=${searchCustFrom}`)
+    return http.get(`/api/likeInfo?name=${searchCustName}&phone=${searchCustMobile}`)
   },
 
   // 新建客户
