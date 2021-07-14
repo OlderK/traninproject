@@ -25,6 +25,9 @@ import dataV from '@jiaminghi/data-view'
 //! mock
 import './mock/mock'
 
+//* 解决控制台警告
+// import 'default-passive-events'
+
 Vue.prototype.$moment = moment
 import * as echarts from 'echarts'
 Vue.prototype.$echarts = echarts

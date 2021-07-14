@@ -38,5 +38,10 @@ export default {
   // 根据客户id+记录id删除记录
   deleteCustRecord(custId, followId) {
     return http.delete(`/api/deleteRecord?custId=${custId}&followId=${followId}`)
+  },
+
+  // 根据创建时间段获取用户
+  getCustInfoByTimeRange(startTime, endTime) {
+    return http.get(`/api/customerdto/${startTime}/${endTime}`)
   }
 }

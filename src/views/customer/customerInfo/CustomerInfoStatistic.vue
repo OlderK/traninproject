@@ -46,19 +46,19 @@
     <!-- 客户级别 -->
     <div class="cust-level">
       <!-- 柱状图 -->
-      <barChart :width="600" :height="250" :data="custLevelStatistList" :options="{ title: '客户级别统计', xAxis }"></barChart>
+      <barChart ref="levelBarChart" :width="600" :height="250" :options="{ title: '客户级别统计' }" :x-axis="xAxis" :bar-data="custLevelBarData" :bar-lengend="custLevelList"></barChart>
 
       <!-- 饼图 -->
-      <pieChart :width="500" :height="250" :data="custLevelStatistList" :options="{ title: '客户级别分布', custLevelPieData }"></pieChart>
+      <pieChart ref="levelPieChart" :width="500" :height="250" :options="{ title: '客户级别分布' }" :pie-data="custLevelPieData"></pieChart>
     </div>
 
     <!-- 客户来源 -->
     <div class="cust-origin">
       <!-- 柱状图 -->
-      <barChart :width="600" :height="250" :data="custOriginStatistList" :options="{ title: '客户来源统计', xAxis }"></barChart>
+      <barChart ref="originBarChart" :width="600" :height="250" :options="{ title: '客户来源统计' }" :x-axis="xAxis" :bar-data="custOriginBarData" :bar-lengend="custOriginList"></barChart>
 
       <!-- 饼图 -->
-      <pieChart :width="500" :height="250" :data="custOriginStatistList" :options="{ title: '客户来源分布', custLevelPieData }"></pieChart>
+      <pieChart ref="originPieChart" :width="500" :height="250" :options="{ title: '客户来源分布' }" :pie-data="custOriginPieData"></pieChart>
     </div>
   </div>
 </template>
@@ -67,6 +67,7 @@
 import barChart from "./BarChart";
 import pieChart from "./PieChart";
 import moment from "moment";
+import CUST_API from "../../../api/customer";
 export default {
   components: {
     barChart,
@@ -92,192 +93,160 @@ export default {
       yearRange: ["", ""],
       monthRange: ["", ""],
       dateRange: [],
-      custLevelStatistList: [],
-      custOriginStatistList: [],
-      custLevelPieData: [],
       custLevelList: ["A", "B", "C"],
       custOriginList: ["拜访", "电话", "广告"],
       xAxis: ["2021-05", "2021-06", "2021-07", "2021-08", "2021-09"],
-      testAxis: [],
-      testD: [
-        {
-          custId: 1,
-          custCreateTime: "2021-07-14 17:50:03",
-          custLevel: "A",
-          custOrigin: "拜访"
-        },
-        {
-          custId: 156,
-          custCreateTime: "2021-07-13 18:16:59",
-          custLevel: "A",
-          custOrigin: "天上aa"
-        },
-        {
-          custId: 89,
-          custCreateTime: "2021-07-31 18:48:57",
-          custLevel: "C",
-          custOrigin: null
-        },
-        {
-          custId: 90,
-          custCreateTime: "2021-07-23 18:49:03",
-          custLevel: "C",
-          custOrigin: null
-        },
-        {
-          custId: 92,
-          custCreateTime: "2021-07-31 18:49:18",
-          custLevel: "C",
-          custOrigin: null
-        },
-        {
-          custId: 93,
-          custCreateTime: "2021-08-08 18:49:25",
-          custLevel: "B",
-          custOrigin: null
-        },
-        {
-          custId: 114,
-          custCreateTime: "2021-07-23 18:49:35",
-          custLevel: "C",
-          custOrigin: null
-        },
-        {
-          custId: 115,
-          custCreateTime: "2021-07-31 06:49:45",
-          custLevel: "C",
-          custOrigin: null
-        },
-        {
-          custId: 116,
-          custCreateTime: "2021-08-20 18:49:54",
-          custLevel: "C",
-          custOrigin: null
-        },
-        {
-          custId: 118,
-          custCreateTime: "2021-08-01 18:50:14",
-          custLevel: "A",
-          custOrigin: null
-        },
-        {
-          custId: 119,
-          custCreateTime: "2021-07-24 18:50:44",
-          custLevel: "A",
-          custOrigin: null
-        },
-        {
-          custId: 120,
-          custCreateTime: "2021-07-23 18:50:50",
-          custLevel: "B",
-          custOrigin: null
-        },
-        {
-          custId: 125,
-          custCreateTime: "2021-07-13 18:51:34",
-          custLevel: "B",
-          custOrigin: null
-        },
-        {
-          custId: 126,
-          custCreateTime: "2021-07-30 18:51:41",
-          custLevel: "B",
-          custOrigin: null
-        },
-        {
-          custId: 127,
-          custCreateTime: "2021-08-07 18:51:28",
-          custLevel: "A",
-          custOrigin: null
-        },
-        {
-          custId: 128,
-          custCreateTime: "2021-08-07 18:51:57",
-          custLevel: "C",
-          custOrigin: null
-        },
-        {
-          custId: 129,
-          custCreateTime: "2021-07-30 18:52:03",
-          custLevel: "C",
-          custOrigin: null
-        },
-        {
-          custId: 130,
-          custCreateTime: "2021-08-08 18:52:10",
-          custLevel: "C",
-          custOrigin: null
-        }
-      ]
+      custLevelBarData: [],
+      custLevelPieData: [],
+      custOriginBarData: [],
+      custOriginPieData: [],
+      custList: []
     };
   },
-  created() {
+  mounted() {
     this.initChart();
-    let startDay = "2021-07-13";
-    let endDay = "2021-07-31";
-    // this.$http
-    //   .get(`http://192.168.122.93:9001/api/customerdto/${startDay}/${endDay}`)
-    //   .then(res => {
-    //     console.log(res.data);
-    //   });
-
-    // 按客户级别分类
-    let dSplitFromLevel = {};
-    for (let i = 0, len = this.testD.length; i < len; ++i) {
-      let level = this.testD[i].custLevel;
-      if (dSplitFromLevel[level]) {
-        dSplitFromLevel[level].push(this.testD[i]);
-      } else {
-        dSplitFromLevel[level] = [this.testD[i]];
-      }
-    }
-
-    // 将数据格式化传递给饼图
-    let pieData = {};
-    for (let key of Object.keys(dSplitFromLevel)) {
-      pieData[key] = dSplitFromLevel[key].length;
-    }
-
-    //
-    let pie = [];
-    for (let i = 0; i < this.custLevelList.length; ++i) {
-      pie.push({
-        name: this.custLevelList[i],
-        value: pieData[this.custLevelList[i]]
-      });
-    }
-
-    this.custLevelPieData = pie;
-
-    console.log(dSplitFromLevel);
   },
+  created() {},
   methods: {
-    initChart() {},
-    chooseDate(date) {
-      console.log(date);
+    // 初始化图表，默认显示最近一个月新建的用户
+    initChart() {
+      let currentTime = new Date().getTime();
+      let endTime = moment(currentTime).format("YYYY-MM-DD");
+      let startTime = moment(currentTime - 2626560000).format("YYYY-MM-DD");
+      this.dateRange = [startTime, endTime];
+      this.getCustList();
+    },
+
+    // 更新图表
+    async updateChart(startTime, endTime) {
+      let data = await CUST_API.getCustInfoByTimeRange(startTime, endTime);
+      this.custList = data.data;
+
+      // 按客户级别分类
+      let dSplitFromLevel = this.classifyDataByKey(this.custList, "custLevel");
+
+      // 将数据格式化传递给饼图
+      this.custLevelPieData = this.formatData2PieData(dSplitFromLevel);
+
+      // 按客户等级统计
+      this.custLevelBarData = this.formatData2BarData(
+        dSplitFromLevel,
+        this.custLevelList,
+        this.xAxis,
+        "custCreateTime"
+      );
+
+      // 按客户来源分类
+      let dSplitFromOrigin = this.classifyDataByKey(
+        this.custList,
+        "custOrigin"
+      );
+      this.custOriginPieData = this.formatData2PieData(dSplitFromOrigin);
+      this.custOriginBarData = this.formatData2BarData(
+        dSplitFromOrigin,
+        this.custOriginList,
+        this.xAxis,
+        "custCreateTime"
+      );
+
+      // 触发子组件表格更新数据
+      this.$nextTick(() => {
+        this.$refs.levelBarChart.init();
+        this.$refs.levelPieChart.init();
+        this.$refs.originBarChart.init();
+        this.$refs.originPieChart.init();
+      });
+    },
+
+    // 按照某个属性值对数据进行分类
+    classifyDataByKey(data, key) {
+      let res = {};
+      for (let i = 0, len = data.length; i < len; ++i) {
+        let targetKey = data[i][key];
+        if (res[targetKey]) {
+          res[targetKey].push(data[i]);
+        } else {
+          res[targetKey] = [data[i]];
+        }
+      }
+      return res;
+    },
+
+    // 格式化分类后的数据为饼图所需数据格式
+    // [ { name: 'A', value: 20 } ]
+    formatData2PieData(data) {
+      let pieData = {};
+      let keyList = [];
+      for (let key of Object.keys(data)) {
+        keyList.push(key);
+        pieData[key] = data[key].length;
+      }
+
+      // 对键名排序
+      keyList = keyList.sort();
+
+      // 将数据按name属性值排序
+      let pie = [];
+      for (let i = 0; i < keyList.length; ++i) {
+        pie.push({
+          name: keyList[i],
+          value: pieData[keyList[i]]
+        });
+      }
+      return pie;
+    },
+
+    // 对数据进行细分，并格式化为柱状图所需数据格式
+    // [ { name: 'xAxis', data: [], type: 'bar' }]
+    formatData2BarData(data, classlist, xAxis, targetKey) {
+      let series = {};
+      for (let key of classlist) {
+        for (let x of xAxis) {
+          let count = data[key].reduce((prev, curr) => {
+            return curr[targetKey].indexOf(x) > -1 ? prev + 1 : prev;
+          }, 0);
+          if (series[key]) {
+            series[key].push(count);
+          } else {
+            series[key] = [count];
+          }
+        }
+      }
+
+      // 将数据格式化传给柱状图
+      let bar = [];
+      for (let key of Object.keys(series)) {
+        bar.push({
+          name: key,
+          data: series[key],
+          type: "bar"
+        });
+      }
+      return bar;
     },
 
     // 查询用户列表
     getCustList() {
+      let startTime = "";
+      let endTime = "";
       switch (this.chooseTimeDimension) {
         case 0:
-          let startYear = moment(this.yearRange[0]).format("YYYY-MM-DD");
-          let endYear = moment(this.yearRange[1]).format("YYYY-MM-DD");
-          this.getYearBetween(startYear, endYear);
+          startTime = moment(this.yearRange[0]).format("YYYY-MM-DD");
+          endTime = moment(this.yearRange[1]).format("YYYY-MM-DD");
+          this.xAxis = this.getYearBetween(startTime, endTime);
           break;
         case 1:
-          let startMonth = moment(this.monthRange[0]).format("YYYY-MM-DD");
-          let endMonth = moment(this.monthRange[1]).format("YYYY-MM-DD");
-          this.getMonthBetween(startMonth, endMonth);
+          startTime = moment(this.monthRange[0]).format("YYYY-MM-DD");
+          endTime = moment(this.monthRange[1]).format("YYYY-MM-DD");
+          this.xAxis = this.getMonthBetween(startTime, endTime);
           break;
         case 2:
-          let startDay = moment(this.dateRange[0]).format("YYYY-MM-DD");
-          let endDay = moment(this.dateRange[1]).format("YYYY-MM-DD");
-
-          this.getDateBetween(startDay, endDay);
-          // console.log(startTime, endTime);
+          startTime = moment(this.dateRange[0]).format("YYYY-MM-DD");
+          endTime = moment(this.dateRange[1]).format("YYYY-MM-DD");
+          this.xAxis = this.getDateBetween(startTime, endTime);
           break;
       }
+      this.updateChart(startTime, endTime);
     },
 
     // 获取两个日期间的所有年
@@ -288,7 +257,7 @@ export default {
       for (let i = parseInt(start); i <= parseInt(end); ++i) {
         res.push(i + "");
       }
-      console.log(res);
+      return res;
     },
 
     // 获取两个日期间的所有月
@@ -332,7 +301,7 @@ export default {
           res.push(key + "-" + item);
         }
       }
-      console.log(res);
+      return res;
     },
 
     // 获取两个日期间的所有天
@@ -369,7 +338,6 @@ export default {
           i = 1;
         }
       }
-      console.log(result);
       return result;
     }
   }
