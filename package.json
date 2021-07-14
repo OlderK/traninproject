@@ -17,6 +17,7 @@
     "chart.js": "^3.4.1",
     "core-js": "^2.6.5",
     "cropperjs": "^1.5.4",
+    "default-passive-events": "^2.0.0",
     "echarts": "^5.1.2",
     "element-china-area-data": "^5.0.2",
     "element-ui": "^2.15.3",

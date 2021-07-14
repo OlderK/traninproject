@@ -1,5 +1,7 @@
 <template>
-  <div ref="chart" :style="{width: width + 'px', height: height + 'px'}"></div>
+  <div>
+    <div ref="pieChart" :style="{width: width + 'px', height: height + 'px'}"></div>
+  </div>
 </template>
 
 <script>
@@ -13,7 +15,7 @@ export default {
       type: Number,
       required: true
     },
-    data: {
+    pieData: {
       type: Array,
       required: true
     },
@@ -21,22 +23,12 @@ export default {
       type: Object
     }
   },
-  mounted() {
-    // console.log(this.options);
-  },
   data() {
-    return {
-      chart: null
-    };
+    return {};
   },
 
-  mounted() {
-    // chart.clear();
-    this.chart = this.$echarts.init(this.$refs.chart);
-    this.init();
-  },
-  beforeUpdate() {
-    // this.chart.clear();
+  created() {
+    // this.init();
   },
 
   methods: {
@@ -48,7 +40,7 @@ export default {
           top: "0%"
         },
         legend: {
-          data: this.options.custLevelPieData.map(v => v.name),
+          data: this.pieData.map(v => v.name),
           align: "right",
           right: "0",
           bottom: "20%",
@@ -67,32 +59,26 @@ export default {
           {
             type: "pie",
             top: "10%",
-            data: this.options.custLevelPieData,
+            data: this.pieData,
             label: {
-              normal: {
-                show: true,
-                position: "inner", //标签的位置
-                color: "#fff",
-                textStyle: {
-                  fontWeight: 500,
-                  fontSize: 10
-                },
-                formatter: "{d}%" //设置百分比
-              }
+              show: true,
+              position: "inner", //标签的位置
+              color: "#fff",
+              fontWeight: 500,
+              fontSize: 10,
+              formatter: "{d}%" //设置百分比
             }
           },
           // 扇形外侧引导线
           {
             type: "pie",
             top: "10%",
-            data: this.options.custLevelPieData,
+            data: this.pieData,
             label: {
               show: true,
               position: "outside",
-              textStyle: {
-                fontWeight: 500,
-                fontSize: 12
-              },
+              fontWeight: 500,
+              fontSize: 12,
               formatter: "{b}：{c}人"
             },
             labelLine: {
@@ -106,8 +92,8 @@ export default {
         }
       };
 
-      // let chart = this.$echarts.init(this.$refs.chart);
-      this.chart.setOption(option, true);
+      let chart = this.$echarts.init(this.$refs["pieChart"]);
+      chart.setOption(option, true);
     }
   }
 };

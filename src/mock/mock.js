@@ -59,7 +59,7 @@ Mock.mock(/\/api\/system\/cscpCurrentUserDetails/, 'get', _ => {
     email: '@email()',
     familyName: '@cfirst()',
     id: 0,
-    imgPath: "@image('100x100', '#894FC4', '#FFF', 'png', 'user')",
+    imgPath: "https://z3.ax1x.com/2021/07/14/WVytUI.png",
     lastLogin: "@date(yyyy-MM-dd hh:mm:ss)",
     mobile: "@string('number', 11)",
     name: "@clast()",
@@ -204,4 +204,118 @@ Mock.mock(/\/api\/deleteRecord/, 'delete', option => {
     status: 200,
     message: 'success'
   }
+})
+
+
+// 获取时间段创建的用户
+Mock.mock(/\/api\/customerdto/, 'get', option => {
+  return [{
+      custId: 1,
+      custCreateTime: "2021-07-14 17:50:03",
+      custLevel: "A",
+      custOrigin: "拜访"
+    },
+    {
+      custId: 156,
+      custCreateTime: "2021-07-15 18:16:59",
+      custLevel: "A",
+      custOrigin: "电话"
+    },
+    {
+      custId: 89,
+      custCreateTime: "2021-07-16 18:48:57",
+      custLevel: "C",
+      custOrigin: "广告"
+    },
+    {
+      custId: 90,
+      custCreateTime: "2021-07-17 18:49:03",
+      custLevel: "C",
+      custOrigin: "拜访"
+    },
+    {
+      custId: 92,
+      custCreateTime: "2021-07-18 18:49:18",
+      custLevel: "C",
+      custOrigin: "电话"
+    },
+    {
+      custId: 93,
+      custCreateTime: "2021-07-19 18:49:25",
+      custLevel: "B",
+      custOrigin: "拜访"
+    },
+    {
+      custId: 114,
+      custCreateTime: "2021-07-20 18:49:35",
+      custLevel: "C",
+      custOrigin: "拜访"
+    },
+    {
+      custId: 115,
+      custCreateTime: "2021-07-21 06:49:45",
+      custLevel: "C",
+      custOrigin: "广告"
+    },
+    {
+      custId: 116,
+      custCreateTime: "2021-07-22 18:49:54",
+      custLevel: "C",
+      custOrigin: "拜访"
+    },
+    {
+      custId: 118,
+      custCreateTime: "2021-07-21 18:50:14",
+      custLevel: "A",
+      custOrigin: "广告"
+    },
+    {
+      custId: 119,
+      custCreateTime: "2021-07-20 18:50:44",
+      custLevel: "A",
+      custOrigin: "拜访"
+    },
+    {
+      custId: 120,
+      custCreateTime: "2021-07-19 18:50:50",
+      custLevel: "B",
+      custOrigin: "电话"
+    },
+    {
+      custId: 125,
+      custCreateTime: "2021-07-18 18:51:34",
+      custLevel: "B",
+      custOrigin: "电话"
+    },
+    {
+      custId: 126,
+      custCreateTime: "2021-07-17 18:51:41",
+      custLevel: "B",
+      custOrigin: "拜访"
+    },
+    {
+      custId: 127,
+      custCreateTime: "2021-07-16 18:51:28",
+      custLevel: "A",
+      custOrigin: "电话"
+    },
+    {
+      custId: 128,
+      custCreateTime: "2021-07-15 18:51:57",
+      custLevel: "C",
+      custOrigin: "拜访"
+    },
+    {
+      custId: 129,
+      custCreateTime: "2021-07-14 18:52:03",
+      custLevel: "C",
+      custOrigin: "广告"
+    },
+    {
+      custId: 130,
+      custCreateTime: "2021-07-13 18:52:10",
+      custLevel: "C",
+      custOrigin: "广告"
+    }
+  ]
 })

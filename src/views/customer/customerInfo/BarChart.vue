@@ -1,8 +1,9 @@
 <template>
-  <div ref="chart" :style="{width: width + 'px', height: height + 'px'}"></div>
+  <div ref="barChart" :style="{width: width + 'px', height: height + 'px'}"></div>
 </template>
 
 <script>
+import echarts from "echarts";
 export default {
   name: "BarChart",
   props: {
@@ -14,7 +15,15 @@ export default {
       type: Number,
       required: true
     },
-    data: {
+    xAxis: {
+      type: Array,
+      required: true
+    },
+    barData: {
+      type: Array,
+      required: true
+    },
+    barLengend: {
       type: Array,
       required: true
     },
@@ -22,48 +31,13 @@ export default {
       type: Object
     }
   },
-  mounted() {},
-  beforeCreate() {},
+
   created() {
-    // console.log(this.options);
-  },
-  data() {
-    return {
-      chartSeries: [
-        {
-          name: "A",
-          data: [100, 230, 100, 200, 300, 400, 385],
-          type: "bar"
-        },
-        {
-          name: "B",
-          data: [100, 230, 900, 200, 500, 400, 385],
-          type: "bar"
-        },
-        {
-          name: "C",
-          data: [120, 220, 190, 210, 350, 420, 395],
-          type: "bar"
-        }
-      ],
-      labelOption: {
-        show: true,
-        position: "insideBottom",
-        distance: 15,
-        align: "left",
-        verticalAlign: "middle",
-        rotate: 90,
-        formatter: "{c}  {name|{a}}",
-        fontSize: 16,
-        rich: {
-          name: {}
-        }
-      }
-    };
+    // this.init();
   },
 
-  mounted() {
-    this.init();
+  data() {
+    return {};
   },
 
   methods: {
@@ -83,7 +57,7 @@ export default {
           bottom: "20"
         },
         legend: {
-          data: ["A", "B", "C"]
+          data: this.barLegend
         },
         toolbox: {
           show: false
@@ -93,12 +67,15 @@ export default {
             name: "",
             type: "category",
             axisTick: { show: false },
-            data: this.options.xAxis
+            data: this.xAxis,
+            barGap: "5%",
+            barCategoryGap: "10%"
           }
         ],
         yAxis: [
           {
             type: "value",
+            minInterval: 1,
             axisTick: {
               show: false
             },
@@ -109,12 +86,13 @@ export default {
         ],
         dataZoom: {
           type: "inside",
-          start: 0
+          start: 0,
+          end: 100
         },
-        series: this.chartSeries
+        series: this.barData
       };
 
-      let chart = this.$echarts.init(this.$refs.chart);
+      let chart = this.$echarts.init(this.$refs["barChart"]);
       chart.setOption(option, true);
     }
   }
