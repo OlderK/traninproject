@@ -4,14 +4,13 @@ const http = util.http;
 export default {
   // 获取客户列表
   getCustList() {
-    // return http.get('/api/customersdto')
-    return http.get('/api/cscpCusts')
+    return http.get('/api/customersdtoall')
   },
 
   // 根据关键字搜索客户
   searchCustFromKey(searchCustName, searchCustMobile, searchCustLevel, searchCustFrom) {
-    // return http.get(`/api/customersdto?custName=${searchCustName}&custTel=${searchCustMobile}&custLevel=${searchCustLevel}&custOrigin=${searchCustFrom}&page=1&size=3`)
-    return http.get(`/api/likeInfo?name=${searchCustName}&phone=${searchCustMobile}`)
+    return http.get(`/api/customersdtoall?custName=${searchCustName}&custTel=${searchCustMobile}&custLevel=${searchCustLevel}&custOrigin=${searchCustFrom}`)
+    // return http.get(`/api/customersdto?name=${searchCustName}&phone=${searchCustMobile}`)
   },
 
   // 新建客户
@@ -32,7 +31,7 @@ export default {
 
   // 根据客户id获取客户跟进记录
   getCustRecords(custId) {
-    return http.get(`/api/cscpCustRecord/${custId}`)
+    return http.get(`/api/customerexts/${custId}`)
   },
 
   // 根据客户id+记录id删除记录
@@ -43,5 +42,22 @@ export default {
   // 根据创建时间段获取用户
   getCustInfoByTimeRange(startTime, endTime) {
     return http.get(`/api/customerdto/${startTime}/${endTime}`)
+  },
+
+  // 导入excel文件
+  importExcel(file) {
+    return http.post('/api/customerdto/fileUpload', file)
+  },
+
+  // 上传客户附件
+  uploadCustAttachment(custId, file) {
+    return http.post(`/api/upload/${custId}`, file)
+  },
+
+  // 获取客户来源/等级列表
+  getCustOriginOrLevelList(type) {
+    return http.get(`/api/cscpDicsByCriteria?dicType=${type}`)
   }
+
+
 }

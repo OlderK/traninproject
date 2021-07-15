@@ -118,15 +118,15 @@
 
         <!-- 客户跟进记录表格展示 -->
         <el-tab-pane label="跟进记录" name="followRecord">
-          <el-table :data="currentShowCustRecordList.recordList" style="width: 100%" :header-cell-style="{ background:'rgba(238, 238, 238, 0.2)',color:'#000', padding: '4px 0' }" :row-style="{ height: 0 + 'px' }" :cell-style="{ padding: '0px' }" tooltip-effect="light" height="260px">
+          <el-table :data="currentShowCustRecordList" style="width: 100%" :header-cell-style="{ background:'rgba(238, 238, 238, 0.2)',color:'#000', padding: '4px 0' }" :row-style="{ height: 0 + 'px' }" :cell-style="{ padding: '0px' }" tooltip-effect="light" height="260px">
             <template slot="empty">
               <el-empty :image-size="100" description="啥也没有。"></el-empty>
             </template>
-            <el-table-column prop="followTime" label="时间" sortable min-width="100" align="center">
+            <el-table-column prop="trackTime" label="时间" sortable min-width="100" align="center">
             </el-table-column>
-            <el-table-column prop="followMethod" label="跟进方式" width="120" align="center">
+            <el-table-column prop="trackMethod" label="跟进方式" width="120" align="center">
             </el-table-column>
-            <el-table-column prop="followContent" min-width="160" :show-overflow-tooltip="true" label="跟进内容" align="center">
+            <el-table-column prop="trackContent" min-width="160" :show-overflow-tooltip="true" label="跟进内容" align="center">
             </el-table-column>
             <el-table-column prop="" label="操作" width="80" align="center">
               <template slot-scope="scope">
@@ -138,7 +138,7 @@
 
         <!-- 附件上传 -->
         <el-tab-pane label="附件" name="attachment" class="attachment">
-          <el-upload class="upload" action="https://jsonplaceholder.typicode.com/posts/" multiple :limit="3">
+          <el-upload ref="uploadAttachment" class="upload" :auto-upload="false" action="" multiple :limit="1" accept=".txt, .doc, .xlsx, .xls, .ppt" :on-change="uploadCustRecordFile">
             <el-button size="small" plain type="primary">点击上传</el-button>
             <span slot="tip" class="el-upload__tip">支持扩展名：.txt/.doc/.exel/.ppt，且不超过500kb</span>
           </el-upload>
@@ -147,13 +147,14 @@
             <template slot="empty">
               <el-empty :image-size="100" description="啥也没有。"></el-empty>
             </template>
-            <el-table-column prop="attachName" label="附件名称" min-width="80" align="center">
+            <el-table-column prop="fileName" label="附件名称" min-width="80" align="center">
             </el-table-column>
-            <el-table-column prop="attachSize" label="附件大小" width="80" align="center">
+            <el-table-column prop="fileSize" label="附件大小" width="80" align="center">
             </el-table-column>
-            <el-table-column prop="attachUploader" width="100" :show-overflow-tooltip="true" label="上传人" align="center">
-            </el-table-column>
-            <el-table-column prop="attachUploadTime" min-width="160" :show-overflow-tooltip="true" label="上传时间" sortable align="center">
+            <!-- //! 上传人？？ -->
+            <!-- <el-table-column prop="attachUploader" width="100" :show-overflow-tooltip="true" label="上传人" align="center">
+            </el-table-column> -->
+            <el-table-column prop="fileUploadTime" min-width="160" :show-overflow-tooltip="true" label="上传时间" sortable align="center">
             </el-table-column>
             <el-table-column prop="" label="操作" width="120" align="center">
               <template slot-scope="scope">
@@ -248,7 +249,7 @@
     </el-dialog>
 
     <!-- 导入客户数据对话框 -->
-    <el-dialog class="import-cust-dialog" title="导入客户" :visible.sync="openImportCustPanel" @close="selectMoreOption = ''">
+    <el-dialog class="import-cust-dialog" title="导入客户" :visible.sync="openImportCustPanel" @close="handlerCloseImportCustPanel">
       <el-row>
         <el-col :offset="1" class="attention-1">
           <p>一、请按照数据模板的格式准备要导入的数据，<el-button type="text" @click="downloadCustModel">点击下载</el-button>《客户导入模板》，注意事项如下：</p>
@@ -274,8 +275,11 @@
         <el-col :offset="1" class="attention-3">
           <p>三、请选择要导入的文件</p>
           <p>
-            <vue-xlsx-table @on-select-file="handleSelectedFile">上传文件</vue-xlsx-table>
-            <span slot="tip" class="el-upload__tip">支持扩展名：.xlsx，且不超过<b>20MB</b></span>
+            <el-upload ref="uploadExcel" action="" :auto-upload="false" :limit="1" accept=".xls, .xlsx" :on-change="uploadExcelFileChange" :on-remove="removeExcelFile">
+              <el-button size="small" type="primary">点击上传</el-button>
+              <div slot="tip" class="el-upload__tip">支持扩展名：.xlsx/.xls，且不超过<b>20MB</b></div>
+            </el-upload>
+            <!-- <vue-xlsx-table @on-select-file="handleSelectedFile">上传文件</vue-xlsx-table> -->
           </p>
         </el-col>
       </el-row>
@@ -364,20 +368,9 @@ export default {
         custUpdateTime: "",
         activeTabName: "followRecord" // attachment
       },
-      currentShowCustRecordList: [
-        {
-          custId: "",
-          recordList: []
-        }
-      ],
-      currentShowCustAttachmentList: [
-        {
-          attachName: "附件.txt",
-          attachSize: "50KB",
-          attachUploader: "小明",
-          attachUploadTime: "2021-07-10 16:23:00"
-        }
-      ],
+      currentShowCustRecordList: [],
+      currentShowRecordListCustId: "",
+      currentShowCustAttachmentList: [],
       excelDataRepeatProcessMethod: "",
       excelDataRepeatProcessMethodList: [
         {
@@ -393,7 +386,8 @@ export default {
           value: 2
         }
       ],
-      importCustList: []
+      importCustList: [],
+      file: ""
     };
   },
   created() {
@@ -404,7 +398,8 @@ export default {
         // window.localStorage.setItem("custList", JSON.stringify(data));
         //? 新建一个数组存储所有用户数据
         // this.custList = res.data.data;
-        this.showCustList = data.data;
+        this.showCustList = data;
+        console.log(data.length);
       }
     });
 
@@ -577,17 +572,41 @@ export default {
         }
       }
 
-      this.currentShowCustRecordList.custId = row.custId;
+      this.currentShowRecordListCustId = row.custId;
 
+      // 获取跟进记录
       CUST_API.getCustRecords(row.custId).then(res => {
-        if (res.data.status === 200) {
-          this.currentShowCustRecordList.recordList = res.data.data.recordList;
+        if (res.status === 200) {
+          this.currentShowCustRecordList = res.data.trackLists;
+        }
+      });
+
+      //! 获取附件信息
+      // this.$http.get('')
+      // this.$http.post('')
+    },
+
+    // 上传客户跟进记录附件
+    uploadCustRecordFile(file, filelist) {
+      let form = new FormData();
+      form.append("file", file.raw);
+      CUST_API.uploadCustAttachment(
+        this.currentShowRecordListCustId,
+        form
+      ).then(res => {
+        if (res.status === 200) {
+          this.$message({
+            type: "success",
+            message: "附件上传成功。"
+          });
+          this.$refs["uploadAttachment"].clearFiles();
         }
       });
     },
 
+    //! 删除跟进记录
     handlerClickDeleteRecord(row) {
-      CUST_API.deleteCustRecord(
+      /* CUST_API.deleteCustRecord(
         this.currentShowCustRecordList.custId,
         row.followId
       ).then(res => {
@@ -609,7 +628,7 @@ export default {
           );
         }
         // console.log();
-      });
+      }); */
     },
 
     // 更多下拉框选择
@@ -691,7 +710,7 @@ export default {
       }, 100);
     },
 
-    // 用户选中excel文件
+    // 将用户选中excel的文件转为JSON进行数据校验
     handleSelectedFile(convertedData) {
       const TITLE = [
         { cnTitle: "客户姓名", enTitle: "custName" },
@@ -747,13 +766,38 @@ export default {
       // console.log(convertedData);
     },
 
-    importCustData() {
+    // 客户选中excel文件
+    uploadExcelFileChange(file, filelist) {
+      let form = new FormData();
+      form.append("file", file.raw);
+      this.file = form;
       this.$message({
         type: "success",
-        message: "导入成功。"
+        message: "上传成功。"
       });
-      this.showCustList.unshift(...this.importCustList);
-      this.openImportCustPanel = false;
+    },
+
+    removeExcelFile() {},
+
+    // 上传客户选中的文件到后端
+    importCustData() {
+      CUST_API.importExcel(this.file).then(res => {
+        if (res.status === 200) {
+          this.$message({
+            type: "success",
+            message: "导入成功。"
+          });
+          this.openImportCustPanel = false;
+          this.$refs["uploadExcel"].clearFiles();
+          this.searchForCust();
+        }
+      });
+    },
+
+    // 导入客户数据面板关闭回调
+    handlerCloseImportCustPanel() {
+      this.selectMoreOption = "";
+      this.$refs["uploadExcel"].clearFiles();
     },
 
     handleSizeChange() {},
@@ -868,8 +912,12 @@ export default {
         .el-upload {
           .el-button {
             margin-right: 10px;
-            // border-color: red;
           }
+        }
+
+        // 调整上传文件可视区域宽度
+        /deep/ .el-upload-list {
+          width: 200px;
         }
       }
     }
@@ -929,6 +977,18 @@ export default {
         & > p:last-child {
           display: flex;
           flex-direction: column;
+          justify-content: start;
+
+          // 调整上传区域包裹容器大小，防止按钮无法点击
+          div {
+            width: 400px;
+            text-align: left;
+          }
+        }
+
+        // 调整上传文件可视区域宽度
+        .el-upload-list {
+          width: 200px;
         }
       }
     }

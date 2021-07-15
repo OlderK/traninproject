@@ -15,7 +15,7 @@ const env = window['$env'] ? window['$env'] : process.env.NODE_ENV
 // util.baseUrl = env === 'development' ? 'http://192.168.122.157:9000/' : 'http://localhost:9000'
 // util.baseUrl = env === 'development' ? 'http://192.168.122.93:9000' : 'http://localhost:9000'
 // util.baseUrl = env === 'development' ? 'http://192.168.72.219:9000' : 'http://localhost:9000'
-util.baseUrl = env === 'development' ? 'http://172.20.10.12:9000/' : 'http://localhost:9000'
+util.baseUrl = env === 'development' ? 'http://192.168.122.93:9001' : 'http://localhost:9000'
 
 // 将需要外挂文件覆盖的属性写在该函数执行前
 loadConfigs()
