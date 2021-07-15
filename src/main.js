@@ -23,7 +23,8 @@ import moment from 'moment'
 import dataV from '@jiaminghi/data-view'
 
 //! mock
-import './mock/mock'
+// import './mock/mock'
+
 
 //* 解决控制台警告
 // import 'default-passive-events'

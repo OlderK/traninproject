@@ -148,13 +148,14 @@ export default {
       }
     },
     refreshToken() {
-      const url = `/api/system/refreshToken?rememberme=${localStorage["rememberme"]}`;
-      this.$http
-        .get(url)
-        .then(response => {
-          localStorage.token = response.data.token;
-        })
-        .catch();
+      //!
+      // const url = `/api/system/refreshToken?rememberme=${localStorage["rememberme"]}`;
+      // this.$http
+      //   .get(url)
+      //   .then(response => {
+      //     localStorage.token = response.data.token;
+      //   })
+      //   .catch();
     },
     toggleShrink() {
       this.shrink = !this.shrink;

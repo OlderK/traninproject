@@ -93,9 +93,9 @@ export default {
       yearRange: ["", ""],
       monthRange: ["", ""],
       dateRange: [],
-      custLevelList: ["A", "B", "C"],
-      custOriginList: ["拜访", "电话", "广告"],
-      xAxis: ["2021-05", "2021-06", "2021-07", "2021-08", "2021-09"],
+      custLevelList: [],
+      custOriginList: [],
+      xAxis: [],
       custLevelBarData: [],
       custLevelPieData: [],
       custOriginBarData: [],
@@ -109,21 +109,33 @@ export default {
   created() {},
   methods: {
     // 初始化图表，默认显示最近一个月新建的用户
-    initChart() {
+    async initChart() {
+      // 获取分类列表
+      let levellist = await CUST_API.getCustOriginOrLevelList(14);
+      let originlist = await CUST_API.getCustOriginOrLevelList(15);
+      this.custLevelList = levellist.data.map(v => v.dicDisplay);
+      this.custOriginList = originlist.data.map(v => v.dicDisplay);
+
       let currentTime = new Date().getTime();
       let endTime = moment(currentTime).format("YYYY-MM-DD");
       let startTime = moment(currentTime - 2626560000).format("YYYY-MM-DD");
       this.dateRange = [startTime, endTime];
+
       this.getCustList();
     },
 
     // 更新图表
     async updateChart(startTime, endTime) {
       let data = await CUST_API.getCustInfoByTimeRange(startTime, endTime);
+      console.log(data.data);
       this.custList = data.data;
 
       // 按客户级别分类
-      let dSplitFromLevel = this.classifyDataByKey(this.custList, "custLevel");
+      let dSplitFromLevel = this.classifyDataByKey(
+        this.custList,
+        "custLevel",
+        this.custLevelList
+      );
 
       // 将数据格式化传递给饼图
       this.custLevelPieData = this.formatData2PieData(dSplitFromLevel);
@@ -139,8 +151,12 @@ export default {
       // 按客户来源分类
       let dSplitFromOrigin = this.classifyDataByKey(
         this.custList,
-        "custOrigin"
+        "custOrigin",
+        this.custOriginList
       );
+
+      console.log(dSplitFromOrigin);
+
       this.custOriginPieData = this.formatData2PieData(dSplitFromOrigin);
       this.custOriginBarData = this.formatData2BarData(
         dSplitFromOrigin,
@@ -159,15 +175,15 @@ export default {
     },
 
     // 按照某个属性值对数据进行分类
-    classifyDataByKey(data, key) {
+    classifyDataByKey(data, key, keylist) {
       let res = {};
+      for (let key of keylist) {
+        res[key] = [];
+      }
+
       for (let i = 0, len = data.length; i < len; ++i) {
         let targetKey = data[i][key];
-        if (res[targetKey]) {
-          res[targetKey].push(data[i]);
-        } else {
-          res[targetKey] = [data[i]];
-        }
+        res[targetKey].push(data[i]);
       }
       return res;
     },
