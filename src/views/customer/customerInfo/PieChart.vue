@@ -43,7 +43,7 @@ export default {
           data: this.pieData.map(v => v.name),
           align: "right",
           right: "0",
-          bottom: "20%",
+          bottom: "10%",
           orient: "vertical"
         },
         tooltip: {

@@ -24,6 +24,7 @@ import dataV from '@jiaminghi/data-view'
 
 //! mock
 // import './mock/mock'
+// import './mock/jumpLogin'
 
 
 //* 解决控制台警告
@@ -40,6 +41,7 @@ Vue.config.productionTip = false
 Vue.prototype.$util = util
 Vue.prototype.$http = util.http
 Vue.prototype.$axios = axios
+Vue.prototype.$store = store
 
 Vue.use(bySrore)
 Vue.use(VueI18n)

@@ -65,18 +65,18 @@ const staticTree = [{
         path: '/customerList',
         name: 'customer-list',
         title: '客户列表',
-        // icon: 'ios-paper',
+        icon: 'md-contacts',
         type: 'menu',
         component: () => import('../views/customer/customerManage/CustomerList.vue')
       },
-      {
+      /* {
         path: '/customerFrom',
         name: 'customer-from',
         title: '客户来源',
         // icon: 'ios-paper',
         type: 'menu',
         component: () => import('../views/customer/customerManage/CustomerFrom.vue')
-      }
+      } */
     ]
   },
   {

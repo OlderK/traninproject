@@ -146,14 +146,12 @@ export default {
       this.getUserInfo();
     },
     getUserInfo() {
-      //!
-      // this.$http
-      //   .get("/api/system/cscpCurrentUserDetails")
-      //   .then(response => {
-      //     this.$store.commit("user/setUserInfo", response.data.data);
-      //     // console.log(response);
-      //   })
-      //   .catch();
+      this.$http
+        .get("/api/system/cscpCurrentUserDetails")
+        .then(response => {
+          this.$store.commit("user/setUserInfo", response.data);
+        })
+        .catch();
     },
     openSetting() {
       this.isSettingOpened = true;

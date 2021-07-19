@@ -42,24 +42,28 @@
       <Button type="primary" @click="getCustList">查询</Button>
       </Col>
     </Row>
+    <div v-loading="loading" element-loading-text="拼命加载中" element-loading-spinner="el-icon-loading" element-loading-background="rgba(255, 255, 255, 0.8)">
 
-    <!-- 客户级别 -->
-    <div class="cust-level">
-      <!-- 柱状图 -->
-      <barChart ref="levelBarChart" :width="600" :height="250" :options="{ title: '客户级别统计' }" :x-axis="xAxis" :bar-data="custLevelBarData" :bar-lengend="custLevelList"></barChart>
+      <!-- 客户级别 -->
+      <div class="cust-level">
+        <!-- 柱状图 -->
+        <barChart ref="levelBarChart" :width="600" :height="250" :options="{ title: '客户级别统计' }" :x-axis="xAxis" :bar-data="custLevelBarData" :bar-lengend="custLevelList"></barChart>
 
-      <!-- 饼图 -->
-      <pieChart ref="levelPieChart" :width="500" :height="250" :options="{ title: '客户级别分布' }" :pie-data="custLevelPieData"></pieChart>
+        <!-- 饼图 -->
+        <pieChart ref="levelPieChart" :width="500" :height="250" :options="{ title: '客户级别分布' }" :pie-data="custLevelPieData"></pieChart>
+      </div>
+
+      <!-- 客户来源 -->
+      <div class="cust-origin">
+        <!-- 柱状图 -->
+        <barChart ref="originBarChart" :width="600" :height="250" :options="{ title: '客户来源统计' }" :x-axis="xAxis" :bar-data="custOriginBarData" :bar-lengend="custOriginList"></barChart>
+
+        <!-- 饼图 -->
+        <pieChart ref="originPieChart" :width="500" :height="250" :options="{ title: '客户来源分布' }" :pie-data="custOriginPieData"></pieChart>
+      </div>
+
     </div>
 
-    <!-- 客户来源 -->
-    <div class="cust-origin">
-      <!-- 柱状图 -->
-      <barChart ref="originBarChart" :width="600" :height="250" :options="{ title: '客户来源统计' }" :x-axis="xAxis" :bar-data="custOriginBarData" :bar-lengend="custOriginList"></barChart>
-
-      <!-- 饼图 -->
-      <pieChart ref="originPieChart" :width="500" :height="250" :options="{ title: '客户来源分布' }" :pie-data="custOriginPieData"></pieChart>
-    </div>
   </div>
 </template>
 
@@ -100,34 +104,42 @@ export default {
       custLevelPieData: [],
       custOriginBarData: [],
       custOriginPieData: [],
-      custList: []
+      custList: [],
+      loading: false
     };
   },
   mounted() {
     this.initChart();
+    // this.getClassifyDataByAPI();
   },
   created() {},
   methods: {
     // 初始化图表，默认显示最近一个月新建的用户
     async initChart() {
-      // 获取分类列表
-      let levellist = await CUST_API.getCustOriginOrLevelList(14);
-      let originlist = await CUST_API.getCustOriginOrLevelList(15);
-      this.custLevelList = levellist.data.map(v => v.dicDisplay);
-      this.custOriginList = originlist.data.map(v => v.dicDisplay);
+      this.loading = true;
+      await this.getOriginAndLevelList();
 
       let currentTime = new Date().getTime();
-      let endTime = moment(currentTime).format("YYYY-MM-DD");
+      let endTime = moment(currentTime + 86400000).format("YYYY-MM-DD");
       let startTime = moment(currentTime - 2626560000).format("YYYY-MM-DD");
       this.dateRange = [startTime, endTime];
 
       this.getCustList();
     },
 
+    // 获取分类列表
+    async getOriginAndLevelList() {
+      let levellist = await CUST_API.getCustOriginOrLevelList(14);
+      let originlist = await CUST_API.getCustOriginOrLevelList(15);
+      this.custLevelList = levellist.data.map(v => v.dicDisplay);
+      this.custOriginList = originlist.data.map(v => v.dicDisplay);
+    },
+
     // 更新图表
     async updateChart(startTime, endTime) {
+      this.loading = true;
+
       let data = await CUST_API.getCustInfoByTimeRange(startTime, endTime);
-      console.log(data.data);
       this.custList = data.data;
 
       // 按客户级别分类
@@ -155,14 +167,17 @@ export default {
         this.custOriginList
       );
 
-      console.log(dSplitFromOrigin);
-
       this.custOriginPieData = this.formatData2PieData(dSplitFromOrigin);
       this.custOriginBarData = this.formatData2BarData(
         dSplitFromOrigin,
         this.custOriginList,
         this.xAxis,
         "custCreateTime"
+      );
+
+      // 将用户来源列表按照来源文字长度排序，防止图例与引导线重叠
+      this.custOriginPieData = this.custOriginPieData.sort(
+        (a, b) => a.name.length - b.name.length
       );
 
       // 触发子组件表格更新数据
@@ -172,6 +187,8 @@ export default {
         this.$refs.originBarChart.init();
         this.$refs.originPieChart.init();
       });
+
+      this.loading = false;
     },
 
     // 按照某个属性值对数据进行分类
@@ -355,6 +372,75 @@ export default {
         }
       }
       return result;
+    },
+
+    // 通过后端接口发起分类检索
+    async getClassifyDataByAPI() {
+      await this.getOriginAndLevelList();
+      let type = ["cust_origin"]; //, "cust_level"];
+      for (let key of type) {
+        let res = await CUST_API.getCustClassifyData(
+          "2021-06-14",
+          "2021-07-15",
+          "day",
+          key
+        );
+
+        // x轴
+        this.xAxis = Object.keys(res.data);
+
+        // 定义一个map类型统计数量
+        let pieDataMap = new Map();
+        // 格式转换
+        for (let key of this.xAxis) {
+          res.data[key] = res.data[key].map(v => {
+            let k = v.match(/.*(?=:)/)[0];
+            let c = +v.match(/(?<=:).*/)[0];
+            if (pieDataMap.has(k)) {
+              pieDataMap.set(k, pieDataMap.get(k) + c);
+            } else {
+              pieDataMap.set(k, c);
+            }
+            return { [k]: c };
+          });
+        }
+
+        // 将map转为饼图数据格式
+        let pieData = [];
+        for (let key of this.custOriginList) {
+          pieData.push({ name: key, value: pieDataMap.get(key) });
+        }
+
+        // 将数据格式为柱状图格式
+
+        // 统计柱状图数据
+        let barData = {};
+        for (let type of this.custOriginList) {
+          barData[type] = [];
+        }
+
+        console.log(barData);
+
+        for (let xAxis of this.xAxis) {
+          let typeLen = this.custOriginList.length;
+          let list = res.data[xAxis];
+          for (let item of list) {
+            let key = Object.keys(item)[0];
+
+            if (barData) {
+              pieData[type] = [];
+            }
+
+            // if(res.data[xAxis])
+          }
+
+          if (data.data[key].length) {
+            // if(pieData[])
+          }
+        }
+
+        // console.log(res.data);
+      }
     }
   }
 };

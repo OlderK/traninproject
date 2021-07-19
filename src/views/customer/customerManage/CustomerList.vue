@@ -14,7 +14,7 @@
       <el-col :span="3" class="cust-select">
         <label for="">客户来源</label>
         <el-select v-model="searchCustFrom" placeholder="请选择" size="small" clearable>
-          <el-option v-for="item in custFromList" :key="item" :label="item" :value="item">
+          <el-option v-for="item in custOriginList" :key="item" :label="item" :value="item">
           </el-option>
         </el-select>
       </el-col>
@@ -30,7 +30,7 @@
         <el-button plain size="small" @click="resetSearch">重置</el-button>
       </el-col>
       <el-col :span="3" class="nav-right">
-        <el-button type="primary" @click="handlerClickCreateCust" size="small">新建用户</el-button>
+        <el-button type="primary" @click="handlerClickCreateCust" size="small">新建客户</el-button>
         <el-select v-model="selectMoreOption" @change="handlerSelectMore" placeholder="更多" size="small">
           <el-option v-for="item in selectMore" :key="item.value" :label="item.name" :value="item.value">
           </el-option>
@@ -39,7 +39,7 @@
     </el-row>
 
     <!-- 客户表格展示区 -->
-    <el-table :data="showCustList" style="width: 100%" :header-cell-style="{ background:'#f0f2f5',color:'#000' }" :row-style="{ height: 0 + 'px' }" :cell-style="{padding: '5px'}" tooltip-effect="light" border height="500px">
+    <el-table v-loading="searchLoading" :data="showCustList" style="width: 100%" :header-cell-style="{ background:'#f0f2f5',color:'#000' }" :row-style="{ height: 0 + 'px' }" :cell-style="{padding: '3px 5px'}" tooltip-effect="light" border max-height="526" :default-sort="{ prop: 'custUpdateTime', order: 'descending' }">
       <template slot="empty">
         <el-empty :image-size="200" description="啥也没有。"></el-empty>
       </template>
@@ -50,7 +50,7 @@
       </el-table-column>
       <el-table-column prop="custTel" label="电话" width="120" align="center">
       </el-table-column>
-      <el-table-column prop="custUpdateTime" min-width="130" sortable label="更新时间" align="center">
+      <el-table-column prop="custUpdateTime" min-width="130" label="更新时间" align="center" sortable :show-overflow-tooltip="true">
       </el-table-column>
       <el-table-column prop="custCardType" width="110" label="证件类型" align="center" :show-overflow-tooltip="true"></el-table-column>
       <el-table-column prop="custCardNum" width="110" label="证件号码" align="center" :show-overflow-tooltip="true"></el-table-column>
@@ -62,21 +62,22 @@
       </el-table-column>
       <el-table-column prop="custDetailAddress" label="详细地址" align="center" :show-overflow-tooltip="true">
       </el-table-column>
-      <el-table-column prop="custCreatFounder" label="创建人" width="80" align="center">
+      <el-table-column prop="custCreatFounder" label="创建人" width="80" align="center" :show-overflow-tooltip="true">
       </el-table-column>
       <el-table-column prop="" label="操作" width="120" align="center">
         <template slot-scope="scope">
-          <el-button type="text" @click="handlerClickEditor(scope.row)">编辑</el-button>
-          <el-button type="text" @click="handlerClickDelete(scope.row)">删除</el-button>
+          <el-button type="text" @click="handlerClickEditorCust(scope.row)">编辑</el-button>
+          <el-button type="text" @click="handlerClickDeleteCust(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
 
     <!-- 分页 -->
     <!-- <Page :total="100" show-total show-elevator show-sizer></Page> -->
+    <Page class="footer-page" :total="custListLen" :page-size="pageSize" :page-size-opts="pageList" @on-change="handlerChangePage" @on-page-size-change="hanlerChangePageSize" show-sizer show-total></Page>
 
     <!-- 客户详情弹窗 -->
-    <el-dialog class="new-cust-dialog" :visible.sync="openCustDetailPanel">
+    <el-dialog class="new-cust-dialog" :visible.sync="openCustDetailPanel" @closed="newTrackContent = ''; newTrackMethod = ''">
 
       <!-- 标题插槽 -->
       <template slot="title">
@@ -107,9 +108,15 @@
       </el-row>
 
       <!-- 添加记录按钮 -->
-      <el-row class="add-record-btn">
-        <el-col :span="1" :offset="22">
-          <el-button type="text" @click="handlerClickEditor(scope.row)">添加记录</el-button>
+      <el-row class="add-record-btn" :gutter="10">
+        <el-col :span="5" :offset="7">
+          <el-input v-model="newTrackMethod" placeholder="请输入跟进方式" size="small" clearable></el-input>
+        </el-col>
+        <el-col :span="9">
+          <el-input v-model="newTrackContent" placeholder="请输入跟进内容" size="small" clearable></el-input>
+        </el-col>
+        <el-col :span="1">
+          <el-button type="text" @click="handlerClickAddRecord" size="small">添加记录</el-button>
         </el-col>
       </el-row>
 
@@ -118,17 +125,17 @@
 
         <!-- 客户跟进记录表格展示 -->
         <el-tab-pane label="跟进记录" name="followRecord">
-          <el-table :data="currentShowCustRecordList" style="width: 100%" :header-cell-style="{ background:'rgba(238, 238, 238, 0.2)',color:'#000', padding: '4px 0' }" :row-style="{ height: 0 + 'px' }" :cell-style="{ padding: '0px' }" tooltip-effect="light" height="260px">
+          <el-table :data="currentShowCustRecordList" style="width: 100%" :header-cell-style="{ background:'rgba(238, 238, 238, 0.2)',color:'#000', padding: '4px 0' }" :row-style="{ height: 0 + 'px' }" :cell-style="{ padding: '0px' }" tooltip-effect="light" height="260px" :default-sort="{prop: 'trackTime', order: 'descending'}">
             <template slot="empty">
               <el-empty :image-size="100" description="啥也没有。"></el-empty>
             </template>
-            <el-table-column prop="trackTime" label="时间" sortable min-width="100" align="center">
+            <el-table-column prop="trackTime" label="时间" sortable min-width="120" align="center" :formatter="formatterTrackTime">
             </el-table-column>
             <el-table-column prop="trackMethod" label="跟进方式" width="120" align="center">
             </el-table-column>
-            <el-table-column prop="trackContent" min-width="160" :show-overflow-tooltip="true" label="跟进内容" align="center">
+            <el-table-column prop="trackContent" min-width="160" label="跟进内容" align="center">
             </el-table-column>
-            <el-table-column prop="" label="操作" width="80" align="center">
+            <el-table-column label="操作" width="80" align="center">
               <template slot-scope="scope">
                 <el-button type="text" @click="handlerClickDeleteRecord(scope.row)">删除</el-button>
               </template>
@@ -138,14 +145,10 @@
 
         <!-- 附件上传 -->
         <el-tab-pane label="附件" name="attachment" class="attachment">
-          <el-upload ref="uploadAttachment" class="upload" :auto-upload="false" action="" multiple :limit="1" accept=".txt, .doc, .xlsx, .xls, .ppt" :on-change="uploadCustRecordFile">
-            <el-button size="small" plain type="primary">点击上传</el-button>
-            <span slot="tip" class="el-upload__tip">支持扩展名：.txt/.doc/.exel/.ppt，且不超过500kb</span>
-          </el-upload>
 
-          <el-table :data="currentShowCustAttachmentList" style="width: 100%" :header-cell-style="{ background:'rgba(238, 238, 238, 0.2)',color:'#000', padding: '4px 0' }" :row-style="{ height: 0 + 'px' }" :cell-style="{ padding: '0px' }" tooltip-effect="light" height="208px">
+          <el-table :data="currentShowCustAttachmentList" style="width: 100%" :header-cell-style="{ background:'rgba(238, 238, 238, 0.2)',color:'#000', padding: '4px 0' }" :row-style="{ height: 0 + 'px' }" :cell-style="{ padding: '0px' }" tooltip-effect="light" height="208px" :default-sort="{prop: 'fileUploadTime', order: 'descending'}">
             <template slot="empty">
-              <el-empty :image-size="100" description="啥也没有。"></el-empty>
+              <el-empty :image-size="50" description=" "></el-empty>
             </template>
             <el-table-column prop="fileName" label="附件名称" min-width="80" align="center">
             </el-table-column>
@@ -158,13 +161,18 @@
             </el-table-column>
             <el-table-column prop="" label="操作" width="120" align="center">
               <template slot-scope="scope">
-                <el-button type="text" @click="handlerClickDeleteRecord(scope.row)">下载</el-button>
-                <el-button type="text" @click="handlerClickDeleteRecord(scope.row)">删除
+                <el-button type="text" @click="handlerClickDownloadAttachment(scope.row)">下载</el-button>
+                <el-button type="text" @click="handlerClickDeleteAttachment(scope.row)">删除
 
                 </el-button>
               </template>
             </el-table-column>
           </el-table>
+
+          <el-upload ref="uploadAttachment" class="upload" :auto-upload="false" action="" multiple :limit="1" accept=".txt, .doc, .xlsx, .xls, .ppt" :on-change="uploadCustRecordFile" :show-file-list="false">
+            <el-button size="small" plain type="primary">点击上传</el-button>
+            <span slot="tip" class="el-upload__tip">支持扩展名：.txt/.doc/.exel/.ppt，且不超过500kb</span>
+          </el-upload>
 
         </el-tab-pane>
       </el-tabs>
@@ -206,7 +214,7 @@
           <el-col :span="8">
             <el-form-item label="*客户来源" label-width="80px" prop="custOrigin">
               <el-select v-model="newCustForm.custOrigin" placeholder="请选择">
-                <el-option v-for="(item, i) in custFromList" :key="i" :label="item" :value="item"></el-option>
+                <el-option v-for="(item, i) in custOriginList" :key="i" :label="item" :value="item"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
@@ -275,7 +283,7 @@
         <el-col :offset="1" class="attention-3">
           <p>三、请选择要导入的文件</p>
           <p>
-            <el-upload ref="uploadExcel" action="" :auto-upload="false" :limit="1" accept=".xls, .xlsx" :on-change="uploadExcelFileChange" :on-remove="removeExcelFile">
+            <el-upload ref="uploadExcel" action="" :auto-upload="false" :limit="1" accept=".xls, .xlsx" :on-change="uploadExcelFileChange">
               <el-button size="small" type="primary">点击上传</el-button>
               <div slot="tip" class="el-upload__tip">支持扩展名：.xlsx/.xls，且不超过<b>20MB</b></div>
             </el-upload>
@@ -308,14 +316,15 @@ export default {
         callback();
       }
     };
+
     return {
       searchCustName: "",
       searchCustMobile: "",
       searchCustLevel: "",
       searchCustFrom: "",
       custDocumentTypeList: ["居民身份证", "港澳通行证", "护照"],
-      custLevelList: ["A", "B", "C", "D", "E"],
-      custFromList: ["拜访", "电话", "广告"],
+      custLevelList: [],
+      custOriginList: [],
       selectMore: [
         {
           value: 0,
@@ -330,6 +339,7 @@ export default {
       selectMoreExportLoading: false,
       custList: [],
       showCustList: [],
+      custListLen: 0,
       deleteId: "",
       openCustDetailPanel: false,
       openCreateNewCustPanel: false,
@@ -352,7 +362,7 @@ export default {
       },
       newCustFormRules: {
         custName: [
-          { required: true, message: "请输入用户名", trigger: "blur" },
+          // { required: true, message: "请输入用户名", trigger: "blur" },
           {}
         ]
         // custTel: [{ validator: validateName, trigger: "blur" }],
@@ -387,37 +397,75 @@ export default {
         }
       ],
       importCustList: [],
-      file: ""
+      file: "",
+      searchLoading: false,
+      newTrackMethod: "",
+      newTrackContent: "",
+      page: 1,
+      pageSize: 10,
+      pageList: [10, 20, 30, 50]
     };
   },
-  created() {
+  computed: {
+    userName() {
+      return (
+        this.$store.state.user.userInfo.familyName +
+        this.$store.state.user.userInfo.name
+      );
+    }
+  },
+  async created() {
     // 页面首次加载获取数据
-    CUST_API.getCustList().then(res => {
-      const { status, data } = res;
-      if (status === 200) {
-        // window.localStorage.setItem("custList", JSON.stringify(data));
-        //? 新建一个数组存储所有用户数据
-        // this.custList = res.data.data;
-        this.showCustList = data;
-        console.log(data.length);
-      }
-    });
+    this.searchLoading = true;
+    CUST_API.getCustList()
+      .then(res => {
+        const { status, data } = res;
+        if (status === 200) {
+          // window.localStorage.setItem("custList", JSON.stringify(data));
+          //? 新建一个数组存储所有用户数据
+          // this.custList = res.data.data;
+          this.searchLoading = false;
+          this.totalCustList = data;
+          this.showCustList = data.slice(0, this.pageSize);
+          this.custListLen = data.length;
+        }
+      })
+      .catch(err => {
+        this.$message({
+          type: "error",
+          message: "客户列表加载失败。"
+        });
+        console.log(err);
+      });
 
-    // console.log(moment().format("YYYY-MM-DD HH:mm:ss"));
+    // 获取用户等级和来源
+    try {
+      let levellist = await CUST_API.getCustOriginOrLevelList(14);
+      let originlist = await CUST_API.getCustOriginOrLevelList(15);
+      this.custLevelList = levellist.data.map(v => v.dicDisplay);
+      this.custOriginList = originlist.data.map(v => v.dicDisplay);
+    } catch {}
   },
   methods: {
     // 搜索客户
     searchForCust() {
-      CUST_API.searchCustFromKey(
-        this.searchCustName,
-        this.searchCustMobile,
-        this.searchCustLevel,
-        this.searchCustFrom
-      ).then(res => {
-        if (res.status === 200) {
-          this.showCustList = res.data;
-        }
-      });
+      this.searchLoading = true;
+      CUST_API.getCustListByPage({
+        custName: this.searchCustName,
+        custTel: this.searchCustMobile,
+        custLevel: this.searchCustLevel,
+        custOrigin: this.searchCustFrom,
+        page: this.page,
+        size: this.pageSize
+      })
+        .then(res => {
+          if (res.status === 200) {
+            this.searchLoading = false;
+            this.showCustList = res.data.beanList;
+            this.custListLen = res.data.totalRecord;
+          }
+        })
+        .catch();
     },
 
     // 重置搜索
@@ -456,14 +504,14 @@ export default {
           },
           ""
         );
+        cscpCust.custAddress = cscpCust.custAddress.trim();
       }
+      cscpCust.custTel = parseInt(cscpCust.custTel);
+      cscpCust.custUpdateTime = moment().format("YYYY-MM-DD HH:mm:ss");
       if (this.custPanelTitle === "新建客户") {
-        cscpCust.custTel = Number(cscpCust.custTel);
-        // cscpCust.custId = Math.floor(Math.random() * 10000 + 200);
-        cscpCust.custUpdateTime = moment().format("YYYY-MM-DD HH:mm:ss");
-        console.log(cscpCust);
-        CUST_API.addNewCust(cscpCust).then(res => {
-          if (res.status >= 200 && res.status < 300) {
+        cscpCust.custCreatFounder = this.userName;
+        CUST_API.addNewCust(cscpCust)
+          .then(res => {
             this.$message({
               message: "新增成功。",
               type: "success"
@@ -473,14 +521,13 @@ export default {
             // 更新客户列表
             this.searchForCust();
             // this.$refs["newCustDialog"].resetField();
-          } else {
+          })
+          .catch(_ => {
             this.$message.error("新增失败");
-          }
-        });
+          });
       } else {
         // 编辑客户
         cscpCust.custId = this.currentEditorCustId;
-        // cscpCust.custId =
         CUST_API.editorCust(cscpCust).then(res => {
           if (res.status >= 200 && res.status < 300) {
             this.$message({
@@ -508,7 +555,7 @@ export default {
     },
 
     // 编辑按钮点击
-    handlerClickEditor(row) {
+    handlerClickEditorCust(row) {
       this.clearCustPanel();
       this.custPanelTitle = "编辑客户";
       this.openCreateNewCustPanel = true;
@@ -540,10 +587,9 @@ export default {
     },
 
     // 删除按钮点击
-    handlerClickDelete(row) {
+    handlerClickDeleteCust(row) {
       this.openDeleteCustPanel = true;
       this.deleteId = row.custId;
-      console.log(row.custId);
     },
 
     // 删除客户
@@ -573,17 +619,95 @@ export default {
       }
 
       this.currentShowRecordListCustId = row.custId;
+      this.getCustAttachList();
+      this.getCustRecordList();
+    },
 
-      // 获取跟进记录
-      CUST_API.getCustRecords(row.custId).then(res => {
+    // 获取客户附件列表
+    async getCustAttachList() {
+      let res = await CUST_API.getCustAttachment(
+        this.currentShowRecordListCustId
+      );
+      if (res.status === 200) {
+        this.currentShowCustAttachmentList = res.data;
+      }
+    },
+
+    // 获取客户跟进记录
+    async getCustRecordList() {
+      let res = await CUST_API.getCustRecords(this.currentShowRecordListCustId);
+      if (res.status === 200) {
+        this.currentShowCustRecordList = res.data.trackLists;
+      }
+    },
+
+    // 格式化跟进时间
+    formatterTrackTime(row, column) {
+      return moment(row.trackTime).format("YYYY-MM-DD HH:mm:ss");
+    },
+
+    // 添加跟进记录
+    handlerClickAddRecord() {
+      let track = {
+        custId: this.currentShowRecordListCustId,
+        trackContent: this.newTrackContent,
+        trackMethod: this.newTrackMethod,
+        trackTime: moment().format("YYYY-MM-DD HH:mm:ss")
+      };
+
+      CUST_API.addCustRecord(track)
+        .then(res => {
+          this.$message({
+            type: "success",
+            message: "添加成功。"
+          });
+          // 更新跟进记录
+          this.getCustRecordList();
+        })
+        .catch(err => {
+          console.log("添加用户跟进记录失败");
+        });
+    },
+
+    // 删除跟进记录
+    handlerClickDeleteRecord(row) {
+      CUST_API.deleteCustRecord(row.id).then(res => {
         if (res.status === 200) {
-          this.currentShowCustRecordList = res.data.trackLists;
+          this.$message({
+            message: "记录删除成功。",
+            type: "success"
+          });
+
+          // 重新获取客户记录
+          this.getCustRecordList();
         }
       });
+    },
 
-      //! 获取附件信息
-      // this.$http.get('')
-      // this.$http.post('')
+    // 下载用户附件
+    handlerClickDownloadAttachment(row) {
+      let a = document.createElement("a");
+      a.href = `http://192.168.122.93:9001/api/download/${row.fileId}`;
+      a.click();
+    },
+
+    // 删除用户附件
+    async handlerClickDeleteAttachment(row) {
+      try {
+        let res = await CUST_API.deleteCustAttachment(row.fileId);
+        let data = await CUST_API.getCustAttachment(
+          this.currentShowRecordListCustId
+        );
+        if (data.status === 200) {
+          this.$message({
+            type: "success",
+            message: "附件删除成功。"
+          });
+
+          // 更新客户附件列表
+          this.getCustAttachList();
+        }
+      } catch {}
     },
 
     // 上传客户跟进记录附件
@@ -600,39 +724,14 @@ export default {
             message: "附件上传成功。"
           });
           this.$refs["uploadAttachment"].clearFiles();
+          // 更新附件列表
+          this.getCustAttachList();
         }
       });
     },
 
-    //! 删除跟进记录
-    handlerClickDeleteRecord(row) {
-      /* CUST_API.deleteCustRecord(
-        this.currentShowCustRecordList.custId,
-        row.followId
-      ).then(res => {
-        if (res.data.status === 200) {
-          this.$message({
-            message: "记录删除成功。",
-            type: "success"
-          });
-          // 重新获取客户记录
-          console.log(this.currentShowCustRecordList.custId);
-
-          CUST_API.getCustRecords(this.currentShowCustRecordList.custId).then(
-            res => {
-              if (res.data.status === 200) {
-                this.currentShowCustRecordList.recordList =
-                  res.data.data.recordList;
-              }
-            }
-          );
-        }
-        // console.log();
-      }); */
-    },
-
     // 更多下拉框选择
-    handlerSelectMore(option) {
+    async handlerSelectMore(option) {
       switch (option) {
         case 0:
           this.openImportCustPanel = true;
@@ -661,38 +760,42 @@ export default {
             "创建人"
           ];
 
-          // 数据格式化处理
-          const data = this.showCustList.map(v => {
-            return [
-              v.custName,
-              v.custTel,
-              v.custUpdateTime,
-              v.custCardType,
-              v.custCardNum,
-              v.custOrigin,
-              v.custLevel,
-              v.custAddress,
-              v.custDetailAddress,
-              v.custCreatFounder
-            ];
-          });
-
-          // console.log(data);
-
-          import("../../../excel/Export2Excel").then(excel => {
-            excel.export_json_to_excel({
-              header: tHeader,
-              data,
-              filename:
-                "客户信息表" +
-                new Date(new Date().getTime() + 28800000)
-                  .toJSON()
-                  .substr(0, 19)
-                  .replace("T", "_")
+          try {
+            let allData = await CUST_API.getCustList();
+            // 数据格式化处理
+            const data = allData.data.map(v => {
+              return [
+                v.custName,
+                v.custTel,
+                v.custUpdateTime,
+                v.custCardType,
+                v.custCardNum,
+                v.custOrigin,
+                v.custLevel,
+                v.custAddress,
+                v.custDetailAddress,
+                v.custCreatFounder
+              ];
             });
-            this.selectMoreOption = "";
-            loading.close();
-          });
+
+            import("../../../excel/Export2Excel").then(excel => {
+              excel.export_json_to_excel({
+                header: tHeader,
+                data,
+                filename:
+                  "所有客户信息表" +
+                  new Date(new Date().getTime() + 28800000)
+                    .toJSON()
+                    .substr(0, 19)
+                    .replace("T", "_")
+              });
+              this.selectMoreOption = "";
+              loading.close();
+            });
+          } catch (err) {
+            console.log(err);
+          }
+
           break;
       }
     },
@@ -777,8 +880,6 @@ export default {
       });
     },
 
-    removeExcelFile() {},
-
     // 上传客户选中的文件到后端
     importCustData() {
       CUST_API.importExcel(this.file).then(res => {
@@ -800,9 +901,32 @@ export default {
       this.$refs["uploadExcel"].clearFiles();
     },
 
-    handleSizeChange() {},
+    // 切换页码
+    handlerChangePage(page) {
+      this.page = page;
+      this.searchLoading = true;
+      CUST_API.getCustListByPage({
+        custName: this.searchCustName,
+        custTel: this.searchCustMobile,
+        custLevel: this.searchCustLevel,
+        custOrigin: this.searchCustFrom,
+        page: page,
+        size: this.pageSize
+      })
+        .then(res => {
+          this.searchLoading = false;
+          this.showCustList = res.data.beanList;
+        })
+        .catch(err => {
+          console.log("分页查询失败");
+        });
+    },
 
-    handleCurrentChange() {}
+    // 切换分页大小
+    hanlerChangePageSize(pagesize) {
+      this.pageSize = pagesize;
+      this.searchForCust();
+    }
   }
 };
 </script>
@@ -855,6 +979,12 @@ export default {
     }
   }
 
+  // 分页
+  .footer-page {
+    position: fixed;
+    bottom: 20px;
+  }
+
   // 所有对话框样式
   /deep/ .el-dialog__header {
     padding: 20px;
@@ -893,10 +1023,12 @@ export default {
 
     // 调整添加记录按钮位置
     .add-record-btn {
+      position: relative;
+      top: 38px;
+      z-index: 1;
+
       .el-button {
-        position: relative;
-        top: 40px;
-        z-index: 1;
+        margin-left: 14px;
       }
     }
 
@@ -907,18 +1039,24 @@ export default {
       }
 
       .attachment {
-        padding: 10px 0;
-
         .el-upload {
           .el-button {
             margin-right: 10px;
           }
         }
 
+        .upload {
+          margin-top: 20px;
+        }
+
         // 调整上传文件可视区域宽度
         /deep/ .el-upload-list {
           width: 200px;
         }
+      }
+      // 隐藏tab栏下划线
+      /deep/ .el-tabs__nav-wrap::after {
+        background: transparent;
       }
     }
   }
@@ -977,7 +1115,7 @@ export default {
         & > p:last-child {
           display: flex;
           flex-direction: column;
-          justify-content: start;
+          justify-content: flex-start;
 
           // 调整上传区域包裹容器大小，防止按钮无法点击
           div {

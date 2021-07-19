@@ -7,7 +7,7 @@
       </el-table-column>
       <el-table-column label="操作" width="180" align="center">
         <template slot-scope="scope">
-          <el-button type="text">添加</el-button>
+          <el-button type="text">添加{{scope.row}}</el-button>
           <el-button type="text">编辑</el-button>
           <el-button type="text">移除</el-button>
         </template>
