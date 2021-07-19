@@ -54,7 +54,7 @@ const staticTree = [{
       component: () => import('../views/home/home.vue')
     }]
   },
-  {
+  /* {
     path: '/customerManage',
     name: 'customer-manage',
     title: '客户管理',
@@ -69,14 +69,14 @@ const staticTree = [{
         type: 'menu',
         component: () => import('../views/customer/customerManage/CustomerList.vue')
       },
-      /* {
+      {
         path: '/customerFrom',
         name: 'customer-from',
         title: '客户来源',
         // icon: 'ios-paper',
         type: 'menu',
         component: () => import('../views/customer/customerManage/CustomerFrom.vue')
-      } */
+      }
     ]
   },
   {
@@ -93,7 +93,7 @@ const staticTree = [{
       type: 'menu',
       component: () => import('../views/customer/customerInfo/CustomerInfoStatistic.vue')
     }]
-  },
+  }, */
 ]
 const staticMenuList = util.getMenuList(staticTree)
 const staticMainRoutes = util.getMenuRoutes(staticTree)
